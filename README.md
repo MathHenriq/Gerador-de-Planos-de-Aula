@@ -49,8 +49,11 @@ a lista mudar.
   ordem corrige pelas setas, sem desmarcar tudo.
 - **Cursos** (5): Oficina de Games, Inteligência Artificial, Comunicação Digital,
   Metaverso, Ambientes Inteligentes.
-- **Duração**: derivada de `MINUTOS_TOTAIS` (90) e não editável — é o mesmo número que a
-  Estrutura da Atividade tem que fechar. Mudar a duração é mudar essa constante.
+- **Duração**: 90 ou 100 minutos, escolha do professor no cabeçalho
+  (`DURACOES_DISPONIVEIS`). É o mesmo número que a Estrutura da Atividade tem que fechar —
+  trocar a duração não redistribui os blocos automaticamente, então o aviso de "faltam N
+  min" aparece até o professor ajustar. Para adicionar uma terceira opção, é só acrescentar
+  o número à lista.
 
 ## Nome do arquivo
 
@@ -155,7 +158,7 @@ Se um catálogo oficial (confirmado contra o anexo do MEC) entrar no escopo de n
 lugar natural para ele é um arquivo novo em `src/bncc/`, com a mesma função de validação
 trocada por uma que compare contra esse catálogo — sem mexer no resto do formulário.
 
-## Deploy## Deploy
+## Deploy
 
 Projeto Vite estático — qualquer host serve, sem back-end e sem variáveis de ambiente. Na
 Vercel, os padrões já funcionam (`npm run build`, saída em `dist`); `vercel.json` só

@@ -11,6 +11,7 @@ export const planoDeAmostra: PlanoDeAula = {
   semana: '31/08 - 04/09',
   conteudo: 'Criação do Front-End do projeto',
   professor: 'Matheus H.',
+  minutos: 90,
   escolas: [
     'EMEIEF Benedito Adherbal Farbo',
     'EMEF Armando Cavazza',

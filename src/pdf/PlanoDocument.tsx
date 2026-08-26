@@ -2,7 +2,7 @@ import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/render
 import type { Style } from '@react-pdf/types'
 import type { ReactNode } from 'react'
 
-import { DURACAO, textoDasEscolas } from '../constants'
+import { formatarDuracao, textoDasEscolas } from '../constants'
 import { nomePadronizado } from '../nomeDoDocumento'
 import type { BlocoAtividade, Habilidade, PlanoDeAula } from '../types'
 import { escalaParaCaber, estimarLinhas, type Paragrafo } from './ajuste'
@@ -506,7 +506,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           caixa={CAIXAS_CABECALHO.duracao}
           {...TEXTO_CABECALHO.duracao}
           rotulo="Duração:"
-          valor={` ${DURACAO}`}
+          valor={` ${formatarDuracao(plano.minutos)}`}
           valorRegular
         />
         <CampoCabecalho

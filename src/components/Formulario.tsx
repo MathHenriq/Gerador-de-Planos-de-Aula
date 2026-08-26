@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { CICLOS_SUGERIDOS, CURSOS, DURACAO, MINUTOS_TOTAIS } from '../constants'
+import { CICLOS_SUGERIDOS, CURSOS, DURACOES_DISPONIVEIS, formatarDuracao } from '../constants'
 import { nomeDoArquivo } from '../nomeDoDocumento'
 import { diagnosticar } from '../pdf/diagnostico'
 import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
@@ -29,7 +29,7 @@ export function Formulario({
   const [erro, setErro] = useState('')
 
   const faltando = camposObrigatoriosFaltando(plano)
-  const tempoOk = fechaNoTempoDaAula(plano.estrutura)
+  const tempoOk = fechaNoTempoDaAula(plano.estrutura, plano.minutos)
   const { apertadas, estouradas } = diagnosticar(plano)
 
   async function baixar() {
@@ -93,8 +93,17 @@ export function Formulario({
                   onChange={(e) => aoMudar({ professor: e.target.value })}
                 />
               </Campo>
-              <Campo rotulo="Duração" dica="fixa em 90 min">
-                <input type="text" value={DURACAO} readOnly />
+              <Campo rotulo="Duração">
+                <select
+                  value={plano.minutos}
+                  onChange={(e) => aoMudar({ minutos: Number(e.target.value) })}
+                >
+                  {DURACOES_DISPONIVEIS.map((min) => (
+                    <option value={min} key={min}>
+                      {formatarDuracao(min)}
+                    </option>
+                  ))}
+                </select>
               </Campo>
             </div>
 
@@ -180,12 +189,13 @@ export function Formulario({
             titulo="Estrutura da atividade"
             etiqueta={
               <span className={`etiqueta ${tempoOk ? 'ok' : 'atencao'}`}>
-                {somaDosBlocos(plano.estrutura)}/{MINUTOS_TOTAIS} min
+                {somaDosBlocos(plano.estrutura)}/{plano.minutos} min
               </span>
             }
           >
             <EditorEstrutura
               blocos={plano.estrutura}
+              minutosTotais={plano.minutos}
               aoMudar={(estrutura) => aoMudar({ estrutura })}
             />
           </Secao>
@@ -216,8 +226,8 @@ export function Formulario({
 
           {!tempoOk ? (
             <Aviso tipo="atencao">
-              A estrutura da atividade soma {somaDosBlocos(plano.estrutura)} min — toda aula tem{' '}
-              {MINUTOS_TOTAIS} min.
+              A estrutura da atividade soma {somaDosBlocos(plano.estrutura)} min — a duração
+              escolhida é {plano.minutos} min.
             </Aviso>
           ) : null}
 

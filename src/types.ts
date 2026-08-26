@@ -19,6 +19,8 @@ export interface PlanoDeAula {
   semana: string
   conteudo: string
   professor: string
+  /** Duração da aula, em minutos — uma das opções de `DURACOES_DISPONIVEIS`. */
+  minutos: number
   /** Núcleos escolhidos pelo professor, entre os de `NUCLEOS`. */
   escolas: string[]
 

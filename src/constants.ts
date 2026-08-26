@@ -50,11 +50,14 @@ export function rotuloDoDia(posicao: number): string {
 }
 
 /**
- * A aula tem 90 minutos. Este é o número do qual tudo depende: a duração
- * impressa no cabeçalho sai daqui, e a Estrutura da Atividade tem que fechar
- * exatamente neste total.
+ * Durações possíveis da aula, em minutos. O professor escolhe uma no
+ * cabeçalho, e a Estrutura da Atividade tem que fechar exatamente nesse
+ * total — é `plano.minutos` que manda, não mais um número fixo único.
  */
-export const MINUTOS_TOTAIS = 90
+export const DURACOES_DISPONIVEIS = [90, 100] as const
+
+/** Duração de um plano novo — a primeira opção da lista. */
+export const MINUTOS_PADRAO: number = DURACOES_DISPONIVEIS[0]
 
 /** 90 → "1h:30 min", no formato do template. */
 export function formatarDuracao(minutos: number): string {
@@ -63,9 +66,6 @@ export function formatarDuracao(minutos: number): string {
   if (!horas) return `${resto} min`
   return `${horas}h:${String(resto).padStart(2, '0')} min`
 }
-
-/** Duração impressa no cabeçalho — sempre derivada de MINUTOS_TOTAIS. */
-export const DURACAO = formatarDuracao(MINUTOS_TOTAIS)
 
 export const MATERIAIS_PADRAO = ['Computador', 'Mouse e teclado', 'Acesso à internet']
 
@@ -89,6 +89,7 @@ export function planoVazio(): PlanoDeAula {
     semana: '',
     conteudo: '',
     professor: '',
+    minutos: MINUTOS_PADRAO,
     escolas: [],
     temaDaAula: '',
     objetivos: [''],

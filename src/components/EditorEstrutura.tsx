@@ -1,21 +1,24 @@
-import { MINUTOS_TOTAIS } from '../constants'
 import { somaDosBlocos } from '../plano'
 import type { BlocoAtividade } from '../types'
 import { ListaEditavel } from './ListaEditavel'
 
 /**
- * Editor dos blocos de tempo da aula. O total precisa fechar em 90 minutos —
- * o aviso fica sempre visível para não passar batido.
+ * Editor dos blocos de tempo da aula. O total precisa fechar exatamente na
+ * duração escolhida no cabeçalho — o aviso fica sempre visível para não
+ * passar batido.
  */
 export function EditorEstrutura({
   blocos,
+  minutosTotais,
   aoMudar,
 }: {
   blocos: BlocoAtividade[]
+  /** Duração escolhida para a aula (`plano.minutos`) — o alvo da soma. */
+  minutosTotais: number
   aoMudar: (blocos: BlocoAtividade[]) => void
 }) {
   const total = somaDosBlocos(blocos)
-  const fecha = total === MINUTOS_TOTAIS
+  const fecha = total === minutosTotais
 
   const trocar = (i: number, mudanca: Partial<BlocoAtividade>) =>
     aoMudar(blocos.map((b, j) => (i === j ? { ...b, ...mudanca } : b)))
@@ -27,9 +30,9 @@ export function EditorEstrutura({
       <p className="explica">
         Total dos blocos:{' '}
         <strong className={`etiqueta ${fecha ? 'ok' : 'atencao'}`}>
-          {total} de {MINUTOS_TOTAIS} min
+          {total} de {minutosTotais} min
         </strong>{' '}
-        {fecha ? '' : `— faltam ${MINUTOS_TOTAIS - total} min para fechar a aula.`}
+        {fecha ? '' : `— faltam ${minutosTotais - total} min para fechar a aula.`}
       </p>
 
       {blocos.map((bloco, i) => (
