@@ -22,7 +22,8 @@ export function SeletorBncc({
   const [digitado, setDigitado] = useState('')
   const [erro, setErro] = useState('')
 
-  const resultados = useMemo(() => buscarNoCatalogo(busca, 30), [busca])
+  // Sem limite: a lista inteira fica à mão, a busca só estreita.
+  const resultados = useMemo(() => buscarNoCatalogo(busca, Number.MAX_SAFE_INTEGER), [busca])
   const escolhidos = new Set(habilidades.map((h) => h.codigo))
 
   function adicionar(novas: Habilidade[]) {
@@ -102,27 +103,31 @@ export function SeletorBncc({
 
       {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
 
-      {busca.trim() ? (
-        <div className="bncc-resultados">
-          {resultados.length === 0 ? (
-            <div className="bncc-resultado">Nenhuma habilidade encontrada para essa busca.</div>
-          ) : (
-            resultados.map((e) => (
-              <button
-                type="button"
-                className="bncc-resultado"
-                key={e.codigo}
-                disabled={escolhidos.has(e.codigo)}
-                onClick={() => adicionar([{ codigo: e.codigo, descricao: e.descricao }])}
-              >
-                <span className="codigo">{e.codigo}</span> <span className="etapa">{e.etapa}</span>
-                <br />
-                {e.descricao}
-              </button>
-            ))
-          )}
-        </div>
-      ) : null}
+      <p className="explica">
+        {busca.trim()
+          ? `${resultados.length} habilidade(s) para "${busca.trim()}"`
+          : `Catálogo completo — ${resultados.length} habilidades. Clique para adicionar.`}
+      </p>
+
+      <div className="bncc-resultados">
+        {resultados.length === 0 ? (
+          <div className="bncc-resultado">Nenhuma habilidade encontrada para essa busca.</div>
+        ) : (
+          resultados.map((e) => (
+            <button
+              type="button"
+              className="bncc-resultado"
+              key={e.codigo}
+              disabled={escolhidos.has(e.codigo)}
+              onClick={() => adicionar([{ codigo: e.codigo, descricao: e.descricao }])}
+            >
+              <span className="codigo">{e.codigo}</span> <span className="etapa">{e.etapa}</span>
+              <br />
+              {e.descricao}
+            </button>
+          ))
+        )}
+      </div>
     </div>
   )
 }

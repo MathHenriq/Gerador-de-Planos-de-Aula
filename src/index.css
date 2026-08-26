@@ -530,7 +530,7 @@ textarea {
 .bncc-resultados {
   border: 1px solid var(--borda);
   border-radius: 9px;
-  max-height: 260px;
+  max-height: 340px;
   overflow-y: auto;
   background: var(--branco);
 }
