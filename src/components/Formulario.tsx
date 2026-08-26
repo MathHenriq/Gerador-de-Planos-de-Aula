@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { CICLOS_SUGERIDOS, CURSOS, DURACAO, MINUTOS_TOTAIS } from '../constants'
+import { nomeDoArquivo } from '../nomeDoDocumento'
 import { diagnosticar } from '../pdf/diagnostico'
 import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
 import type { PlanoDeAula } from '../types'
@@ -241,6 +242,10 @@ export function Formulario({
               {baixando ? 'Gerando…' : 'Baixar PDF'}
             </button>
           </div>
+
+          <p className="nome-arquivo" title={nomeDoArquivo(plano)}>
+            Sai como <strong>{nomeDoArquivo(plano)}</strong>
+          </p>
 
           <PreviaPdf plano={plano} />
         </div>

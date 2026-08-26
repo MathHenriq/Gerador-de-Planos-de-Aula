@@ -370,6 +370,20 @@ textarea {
   align-items: center;
 }
 
+/* ── nome do arquivo ──────────────────────────────────────────────────────── */
+
+.nome-arquivo {
+  font-size: 12px;
+  color: var(--tinta-suave);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.nome-arquivo strong {
+  color: var(--tinta);
+  font-weight: 600;
+}
+
 /* ── avisos ───────────────────────────────────────────────────────────────── */
 
 .aviso {

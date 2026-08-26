@@ -1,15 +1,10 @@
 import { pdf } from '@react-pdf/renderer'
 import { useEffect, useRef, useState } from 'react'
 
+import { nomeDoArquivo } from '../nomeDoDocumento'
 import { PlanoDocument } from '../pdf/PlanoDocument'
 import { ASSETS } from '../pdf/recursos.web'
 import type { PlanoDeAula } from '../types'
-
-/** Nome do arquivo baixado — "Plano de aula — 31_08 a 04_09.pdf". */
-export function nomeDoArquivo(plano: PlanoDeAula): string {
-  const referencia = plano.semana.trim() || plano.temaDaAula.trim() || 'Núcleo WIT'
-  return `Plano de aula — ${referencia.replace(/[\\/:*?"<>|]/g, '_')}.pdf`
-}
 
 async function gerarBlob(plano: PlanoDeAula): Promise<Blob> {
   return pdf(<PlanoDocument plano={plano} assets={ASSETS} />).toBlob()

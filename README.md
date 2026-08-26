@@ -47,6 +47,29 @@ a lista mudar.
 - **Duração**: derivada de `MINUTOS_TOTAIS` (90) e não editável — é o mesmo número que a
   Estrutura da Atividade tem que fechar. Mudar a duração é mudar essa constante.
 
+## Nome do arquivo
+
+Todo documento sai com o nome padronizado do Núcleo WIT:
+
+```
+Plano de aula Núcleo WIT - Nome Sobrenome - data
+Plano de aula Núcleo WIT - Matheus Henrique - 31.08 - 04.09.pdf
+```
+
+Regras, em [`src/nomeDoDocumento.ts`](src/nomeDoDocumento.ts):
+
+- **Nome**: primeiro nome + primeiro sobrenome, tirados do campo *Prof.*. Partículas são
+  puladas ("Ana de Souza Lima" → "Ana Souza"). A função só encurta: quem digitar
+  "Matheus H." recebe "Matheus H.", porque não há como adivinhar o nome completo.
+- **Data**: o campo *Semana*, com as barras trocadas por ponto. O padrão escrito usa
+  "31/08 - 04/09", mas barra é caractere proibido em nome de arquivo no Windows, no macOS
+  e no Linux — o ponto mantém a forma sem quebrar o download. Dentro do PDF, o cabeçalho
+  continua mostrando a semana exatamente como foi digitada.
+- Campo vazio é omitido, e o nome se fecha com as partes que existirem.
+
+O mesmo nome vai nos metadados do PDF (o título que o leitor mostra), e a tela exibe o
+nome final ao lado do botão de baixar.
+
 ## Estrutura
 
 ```
@@ -63,6 +86,7 @@ src/
     validar.ts      validação — nada entra no plano sem estar no catálogo
   components/     interface
   constants.ts    núcleos, cursos, duração
+  nomeDoDocumento.ts  nome padronizado do arquivo e do título do PDF
 scripts/          geradores e conferência de layout
 ```
 

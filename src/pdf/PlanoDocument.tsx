@@ -3,6 +3,7 @@ import type { Style } from '@react-pdf/types'
 import type { ReactNode } from 'react'
 
 import { DURACAO, textoDasEscolas } from '../constants'
+import { nomePadronizado } from '../nomeDoDocumento'
 import type { BlocoAtividade, Habilidade, PlanoDeAula } from '../types'
 import { escalaParaCaber, estimarLinhas, type Paragrafo } from './ajuste'
 import { FAMILIA } from './fontes'
@@ -475,7 +476,7 @@ export interface PlanoDocumentProps {
 export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
   return (
     <Document
-      title={`Plano de aula — ${plano.temaDaAula || 'Núcleo WIT'}`}
+      title={nomePadronizado(plano)}
       author={plano.professor || 'Núcleo WIT'}
       creator="Gerador de Plano de Aula — Núcleo WIT"
     >
