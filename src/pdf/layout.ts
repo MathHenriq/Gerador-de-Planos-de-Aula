@@ -5,6 +5,12 @@
  * números da especificação, que por sua vez foram lidos do arquivo de produção
  * do Canva e conferidos contra os PDFs reais das semanas 27/07 e 31/08.
  *
+ * A ordem das seções (Escolas → Tema → Resumo → Materiais → Objetivos →
+ * Habilidades na página 1; Metodologia → Estrutura na página 2; Recursos →
+ * Observação na página 3) segue o PDF de referência mais recente do Núcleo
+ * WIT. A caixa de Observação é a única sem par no PDF de referência — foi
+ * adicionada abaixo de Recursos, com o mesmo estilo das demais.
+ *
  * A conversão para pontos do PDF é feita por `pt()`: 794 px × 0,75 = 595,5 pt,
  * 1123 px × 0,75 = 842,25 pt (A4).
  */
@@ -76,15 +82,16 @@ export interface Rotulo {
 }
 
 export const ROTULOS = {
-  escolas: { top: 121.0, left: 21.5, fonte: 16 },
-  tema: { top: 178.3, left: 24.7, fonte: 16 },
-  objetivos: { top: 218.8, left: 24.7, fonte: 16 },
-  habilidades: { top: 413.9, left: 24.7, fonte: 16 },
-  materiais: { top: 620.9, left: 24.7, fonte: 16 },
-  metodologia: { top: 760.3, left: 24.7, fonte: 16 },
-  resumo: { top: 128.9, left: 24.7, fonte: 16 },
-  estrutura: { top: 291.4, left: 24.7, fonte: 16 },
+  escolas: { top: 128.8, left: 21.5, fonte: 16 },
+  tema: { top: 176.8, left: 24.7, fonte: 16 },
+  resumo: { top: 218.4, left: 23.5, fonte: 16 },
+  materiais: { top: 411.3, left: 23.5, fonte: 16 },
+  objetivos: { top: 550.4, left: 23.5, fonte: 16 },
+  habilidades: { top: 754.5, left: 23.5, fonte: 16 },
+  metodologia: { top: 128.9, left: 24.7, fonte: 16 },
+  estrutura: { top: 569.5, left: 24.7, fonte: 16 },
   recursos: { top: 140.8, left: 24.7, fonte: 16 },
+  observacao: { top: 879.1, left: 24.7, fonte: 16 },
 } satisfies Record<string, Rotulo>
 
 /** Caixas do cabeçalho (linha 1 e 2 da página 1). */
@@ -108,15 +115,23 @@ export const TEXTO_CABECALHO = {
 } satisfies Record<string, { padLeft: number; fonte: number }>
 
 export const CAIXAS = {
-  escolas: { top: 114.5, left: 103.5, largura: 656.3, altura: 49.9 },
-  tema: { top: 171.4, left: 154.0, largura: 610.9, altura: 31.4 },
-  objetivos: { top: 244.4, left: 24.7, largura: 743.4, altura: 153.3 },
-  habilidades: { top: 436.5, left: 31.4, largura: 745.8, altura: 162.8 },
-  materiais: { top: 646.2, left: 24.7, largura: 745.8, altura: 97.8 },
-  metodologia: { top: 785.6, left: 21.5, largura: 749.0, altura: 277.7 },
-  resumo: { top: 162.4, left: 24.7, largura: 740.7, altura: 115.4 },
-  estrutura: { top: 319.1, left: 25.6, largura: 739.9, altura: 755.0 },
-  recursos: { top: 170.5, left: 25.8, largura: 742.1, altura: 909.6 },
+  escolas: { top: 114.5, left: 103.5, largura: 661.5, altura: 49.9 },
+  /**
+   * Left/largura mantidos do template anterior: a referência nova usa "TITULO"
+   * (uma palavra) como rótulo lateral, encostado na caixa; o rótulo real desta
+   * seção é "Tema da aula:", mais longo, e precisa da folga extra à esquerda
+   * para não invadir a caixa.
+   */
+  tema: { top: 171.5, left: 154.0, largura: 610.9, altura: 31.3 },
+  resumo: { top: 248.0, left: 23.5, largura: 748.9, altura: 153.3 },
+  materiais: { top: 442.5, left: 23.5, largura: 748.9, altura: 97.9 },
+  objetivos: { top: 581.6, left: 23.5, largura: 748.9, altura: 162.8 },
+  habilidades: { top: 785.6, left: 23.5, largura: 748.9, altura: 277.7 },
+  metodologia: { top: 164.0, left: 24.7, largura: 740.0, altura: 390.1 },
+  estrutura: { top: 603.2, left: 24.7, largura: 740.0, altura: 470.9 },
+  recursos: { top: 169.1, left: 24.7, largura: 742.1, altura: 700.0 },
+  /** Nova — não existe no PDF de referência; adicionada abaixo de Recursos. */
+  observacao: { top: 908.1, left: 24.7, largura: 742.1, altura: 180.0 },
 } satisfies Record<string, Caixa>
 
 export const TEXTOS = {
@@ -129,6 +144,7 @@ export const TEXTOS = {
   resumo: { padTop: 8.3, padLeft: 12.0, padRight: 12, fonte: 13.3, entrelinha: 18, alinhamento: 'justify' },
   estrutura: { padTop: 11.5, padLeft: 36.0, padMarcador: 21.1, padRight: 14, fonte: 14.7, entrelinha: 20, alinhamento: 'left' },
   recursos: { padTop: 17.8, padLeft: 38.5, padMarcador: 23.6, padRight: 14, fonte: 14.7, entrelinha: 20, alinhamento: 'left' },
+  observacao: { padTop: 8.3, padLeft: 12.0, padRight: 12, fonte: 13.3, entrelinha: 18, alinhamento: 'justify' },
 } satisfies Record<string, Texto>
 
 /** Recuo do título de cada bloco da Estrutura da Atividade (não leva marcador). */

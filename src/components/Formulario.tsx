@@ -135,6 +135,25 @@ export function Formulario({
             />
           </Secao>
 
+          <Secao titulo="Resumo da aula" explica="Um parágrafo corrido, página 1 do PDF.">
+            <textarea
+              rows={5}
+              value={plano.resumo}
+              placeholder="Aula introdutória sobre…"
+              onChange={(e) => aoMudar({ resumo: e.target.value })}
+            />
+          </Secao>
+
+          <Secao titulo="Materiais necessários">
+            <ListaEditavel
+              itens={plano.materiais.length ? plano.materiais : ['']}
+              aoMudar={(materiais) => aoMudar({ materiais })}
+              placeholder="Ex.: Computador"
+              rotuloAdicionar="Adicionar material"
+              linhas={1}
+            />
+          </Secao>
+
           <Secao
             titulo="Objetivos de aprendizagem"
             explica="Um objetivo por item. Aparecem como lista com marcadores."
@@ -157,31 +176,12 @@ export function Formulario({
             />
           </Secao>
 
-          <Secao titulo="Materiais necessários">
-            <ListaEditavel
-              itens={plano.materiais.length ? plano.materiais : ['']}
-              aoMudar={(materiais) => aoMudar({ materiais })}
-              placeholder="Ex.: Computador"
-              rotuloAdicionar="Adicionar material"
-              linhas={1}
-            />
-          </Secao>
-
-          <Secao titulo="Metodologia">
+          <Secao titulo="Metodologia" explica="Página 2 do PDF.">
             <ListaEditavel
               itens={plano.metodologia}
               aoMudar={(metodologia) => aoMudar({ metodologia })}
               placeholder="Como a aula é conduzida"
               rotuloAdicionar="Adicionar passo"
-            />
-          </Secao>
-
-          <Secao titulo="Resumo da aula" explica="Um parágrafo corrido, página 2 do PDF.">
-            <textarea
-              rows={5}
-              value={plano.resumo}
-              placeholder="Aula introdutória sobre…"
-              onChange={(e) => aoMudar({ resumo: e.target.value })}
             />
           </Secao>
 
@@ -207,6 +207,15 @@ export function Formulario({
               placeholder="Ex.: VSCode"
               rotuloAdicionar="Adicionar recurso"
               linhas={1}
+            />
+          </Secao>
+
+          <Secao titulo="Observação" explica="Campo livre, opcional — fecha a página 3.">
+            <textarea
+              rows={3}
+              value={plano.observacao}
+              placeholder="Alguma observação sobre a aula, a turma ou o núcleo…"
+              onChange={(e) => aoMudar({ observacao: e.target.value })}
             />
           </Secao>
 

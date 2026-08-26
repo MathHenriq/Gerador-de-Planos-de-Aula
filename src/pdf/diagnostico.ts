@@ -57,6 +57,7 @@ export function diagnosticar(plano: PlanoDeAula): Diagnostico {
       itens: plano.estrutura.flatMap((b) => [`${b.titulo} – ${b.minutos} MIN`, ...b.itens]),
     },
     { nome: 'recursos', chave: 'recursos', itens: plano.recursos },
+    { nome: 'observação', chave: 'observacao', itens: [plano.observacao], maiuscula: false },
   ]
 
   const apertadas: string[] = []

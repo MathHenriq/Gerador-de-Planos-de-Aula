@@ -104,5 +104,6 @@ export function planoVazio(): PlanoDeAula {
       { titulo: 'Finalização da aula', minutos: 10, itens: [''] },
     ],
     recursos: [''],
+    observacao: '',
   }
 }

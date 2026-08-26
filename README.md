@@ -97,6 +97,19 @@ src/
 scripts/          geradores e conferência de layout
 ```
 
+### Ordem das seções
+
+Página 1 — Cabeçalho, Escolas, Tema da aula, Resumo da aula, Materiais necessários,
+Objetivos de aprendizagem, Habilidades da aula.
+Página 2 — Metodologia, Estrutura da atividade.
+Página 3 — Recursos necessários, Observação.
+
+Essa é a ordem do PDF de referência mais recente do Núcleo WIT — note que difere da
+versão anterior deste gerador (que tinha Resumo e Estrutura numa página à parte). O campo
+**Observação**, no fim da página 3, é o único que não existe nesse PDF de referência: foi
+acrescentado a pedido, com o mesmo estilo de caixa das demais seções, ocupando o espaço que
+sobrou depois de encolher a caixa de Recursos.
+
 ## Fidelidade do layout
 
 `src/pdf/layout.ts` guarda todas as coordenadas em pixels do design original

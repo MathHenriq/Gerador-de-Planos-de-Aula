@@ -24,17 +24,19 @@ export interface PlanoDeAula {
   /** Núcleos escolhidos pelo professor, entre os de `NUCLEOS`. */
   escolas: string[]
 
-  // Página 1
+  // Página 1: Escolas (acima) → Tema → Resumo → Materiais → Objetivos → Habilidades
   temaDaAula: string
+  resumo: string
+  materiais: string[]
   objetivos: string[]
   habilidades: Habilidade[]
-  materiais: string[]
-  metodologia: string[]
 
-  // Página 2
-  resumo: string
+  // Página 2: Metodologia → Estrutura da Atividade
+  metodologia: string[]
   estrutura: BlocoAtividade[]
 
-  // Página 3
+  // Página 3: Recursos → Observação
   recursos: string[]
+  /** Campo livre no fim do documento — não faz parte do modelo original. */
+  observacao: string
 }

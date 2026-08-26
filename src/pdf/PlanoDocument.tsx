@@ -480,7 +480,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
       author={plano.professor || 'Núcleo WIT'}
       creator="Gerador de Plano de Aula — Núcleo WIT"
     >
-      {/* Página 1 — cabeçalho, objetivos, habilidades, materiais e metodologia */}
+      {/* Página 1 — cabeçalho, escolas, tema, resumo, materiais, objetivos e habilidades */}
       <Page size={PAGINA_PT} style={s.pagina}>
         <Marca assets={assets} primeira />
 
@@ -541,6 +541,24 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           negrito
         />
 
+        <RotuloSecao rotulo={ROTULOS.resumo}>Resumo da aula</RotuloSecao>
+        <Moldura caixa={CAIXAS.resumo} />
+        <CaixaParagrafo
+          caixa={CAIXAS.resumo}
+          texto={TEXTOS.resumo}
+          conteudo={plano.resumo}
+          maiuscula
+        />
+
+        <RotuloSecao rotulo={ROTULOS.materiais}>Materiais necessários</RotuloSecao>
+        <Moldura caixa={CAIXAS.materiais} />
+        <CaixaLista
+          caixa={CAIXAS.materiais}
+          texto={TEXTOS.materiais}
+          itens={plano.materiais}
+          maiuscula
+        />
+
         <RotuloSecao rotulo={ROTULOS.objetivos}>Objetivos de aprendizagem</RotuloSecao>
         <Moldura caixa={CAIXAS.objetivos} />
         <CaixaLista
@@ -557,15 +575,11 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           texto={TEXTOS.habilidades}
           habilidades={plano.habilidades}
         />
+      </Page>
 
-        <RotuloSecao rotulo={ROTULOS.materiais}>Materiais necessários</RotuloSecao>
-        <Moldura caixa={CAIXAS.materiais} />
-        <CaixaLista
-          caixa={CAIXAS.materiais}
-          texto={TEXTOS.materiais}
-          itens={plano.materiais}
-          maiuscula
-        />
+      {/* Página 2 — metodologia e estrutura da atividade */}
+      <Page size={PAGINA_PT} style={s.pagina}>
+        <Marca assets={assets} />
 
         <RotuloSecao rotulo={ROTULOS.metodologia}>Metodologia</RotuloSecao>
         <Moldura caixa={CAIXAS.metodologia} />
@@ -575,27 +589,13 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           itens={plano.metodologia}
           maiuscula
         />
-      </Page>
-
-      {/* Página 2 — resumo e estrutura da atividade */}
-      <Page size={PAGINA_PT} style={s.pagina}>
-        <Marca assets={assets} />
-
-        <RotuloSecao rotulo={ROTULOS.resumo}>Resumo da aula</RotuloSecao>
-        <Moldura caixa={CAIXAS.resumo} />
-        <CaixaParagrafo
-          caixa={CAIXAS.resumo}
-          texto={TEXTOS.resumo}
-          conteudo={plano.resumo}
-          maiuscula
-        />
 
         <RotuloSecao rotulo={ROTULOS.estrutura}>Estrutura da atividade</RotuloSecao>
         <Moldura caixa={CAIXAS.estrutura} />
         <CaixaEstrutura caixa={CAIXAS.estrutura} texto={TEXTOS.estrutura} blocos={plano.estrutura} />
       </Page>
 
-      {/* Página 3 — recursos necessários */}
+      {/* Página 3 — recursos necessários e observação */}
       <Page size={PAGINA_PT} style={s.pagina}>
         <Marca assets={assets} />
 
@@ -606,6 +606,14 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           texto={TEXTOS.recursos}
           itens={plano.recursos}
           maiuscula
+        />
+
+        <RotuloSecao rotulo={ROTULOS.observacao}>Observação</RotuloSecao>
+        <Moldura caixa={CAIXAS.observacao} />
+        <CaixaParagrafo
+          caixa={CAIXAS.observacao}
+          texto={TEXTOS.observacao}
+          conteudo={plano.observacao}
         />
       </Page>
     </Document>
