@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+*.local
+.DS_Store
+amostras/
+
+# artefatos do tsc -b
+*.tsbuildinfo
