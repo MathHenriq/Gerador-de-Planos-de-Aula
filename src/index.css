@@ -501,6 +501,36 @@ textarea {
   flex: none;
 }
 
+/* ── filtro por competência ───────────────────────────────────────────────── */
+
+.competencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  border: 1px solid var(--borda);
+  background: var(--branco);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--verde);
+}
+
+.chip.ativo {
+  background: var(--verde-fundo);
+  border-color: var(--verde);
+  color: var(--verde-escuro);
+}
+
 /* ── BNCC ─────────────────────────────────────────────────────────────────── */
 
 .bncc-escolhida {

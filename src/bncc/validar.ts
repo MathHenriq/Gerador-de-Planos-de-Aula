@@ -1,5 +1,6 @@
 import type { Habilidade } from '../types'
 import { CATALOGO_BNCC, INDICE_BNCC, type EntradaBncc } from './catalogo'
+import { competenciasDaHabilidade } from './competencias'
 
 /** "ef69co02", "EF69-CO02", " ef 69 co 02 " → "EF69CO02". */
 export function normalizarCodigo(bruto: string): string {
@@ -43,17 +44,34 @@ export function validarCodigos(codigos: string[]): ResultadoValidacao {
   return { validas, descartados }
 }
 
-/** Busca livre por código ou por trecho da descrição, para o seletor da interface. */
-export function buscarNoCatalogo(consulta: string, limite = 40): EntradaBncc[] {
+/**
+ * Busca livre por código ou por trecho da descrição, para o seletor da
+ * interface. `competencias` restringe às habilidades daquelas competências
+ * (ver a ressalva em ./competencias.ts).
+ */
+export function buscarNoCatalogo(
+  consulta: string,
+  limite = 40,
+  competencias?: number[],
+): EntradaBncc[] {
+  const base =
+    competencias && competencias.length
+      ? CATALOGO_BNCC.filter((e) =>
+          competenciasDaHabilidade(e.codigo).some((c) => competencias.includes(c)),
+        )
+      : CATALOGO_BNCC
+
   const termo = consulta.trim().toLowerCase()
-  if (!termo) return CATALOGO_BNCC.slice(0, limite)
+  if (!termo) return base.slice(0, limite)
 
   const semAcento = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const alvo = semAcento(termo)
   const palavras = alvo.split(/\s+/).filter(Boolean)
 
-  return CATALOGO_BNCC.filter((e) => {
-    const texto = semAcento(`${e.codigo} ${e.descricao} ${e.etapa}`)
-    return palavras.every((p) => texto.includes(p))
-  }).slice(0, limite)
+  return base
+    .filter((e) => {
+      const texto = semAcento(`${e.codigo} ${e.descricao} ${e.etapa}`)
+      return palavras.every((p) => texto.includes(p))
+    })
+    .slice(0, limite)
 }

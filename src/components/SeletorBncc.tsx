@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 
+import { COMPETENCIAS_EF } from '../bncc/competencias'
 import { buscarNoCatalogo, validarCodigos } from '../bncc/validar'
 import type { Habilidade } from '../types'
 import { Aviso } from './ui'
@@ -21,9 +22,22 @@ export function SeletorBncc({
   const [busca, setBusca] = useState('')
   const [digitado, setDigitado] = useState('')
   const [erro, setErro] = useState('')
+  /** Começa nas competências 5 e 6, que são as usadas no curso. */
+  const [competencias, setCompetencias] = useState<number[]>(
+    COMPETENCIAS_EF.map((c) => c.numero),
+  )
 
   // Sem limite: a lista inteira fica à mão, a busca só estreita.
-  const resultados = useMemo(() => buscarNoCatalogo(busca, Number.MAX_SAFE_INTEGER), [busca])
+  const resultados = useMemo(
+    () => buscarNoCatalogo(busca, Number.MAX_SAFE_INTEGER, competencias),
+    [busca, competencias],
+  )
+
+  function alternarCompetencia(numero: number) {
+    setCompetencias((atual) =>
+      atual.includes(numero) ? atual.filter((n) => n !== numero) : [...atual, numero].sort(),
+    )
+  }
   const escolhidos = new Set(habilidades.map((h) => h.codigo))
 
   function adicionar(novas: Habilidade[]) {
@@ -103,10 +117,31 @@ export function SeletorBncc({
 
       {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
 
+      <div className="competencias">
+        {COMPETENCIAS_EF.map((c) => (
+          <button
+            type="button"
+            key={c.numero}
+            className={`chip${competencias.includes(c.numero) ? ' ativo' : ''}`}
+            onClick={() => alternarCompetencia(c.numero)}
+            title={c.texto}
+          >
+            Competência {c.numero} · {c.apelido}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={`chip${competencias.length === 0 ? ' ativo' : ''}`}
+          onClick={() => setCompetencias([])}
+        >
+          Catálogo inteiro
+        </button>
+      </div>
+
       <p className="explica">
         {busca.trim()
           ? `${resultados.length} habilidade(s) para "${busca.trim()}"`
-          : `Catálogo completo — ${resultados.length} habilidades. Clique para adicionar.`}
+          : `${resultados.length} habilidades. Clique para adicionar.`}
       </p>
 
       <div className="bncc-resultados">
