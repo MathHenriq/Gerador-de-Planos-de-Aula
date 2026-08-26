@@ -8,10 +8,24 @@ import type { PlanoDeAula } from './types'
 
 const CHAVE_RASCUNHO = 'nucleo-wit:plano-de-aula'
 
+/**
+ * Se o que está salvo é byte-a-byte o plano de exemplo, não é um rascunho —
+ * é sequela do bug em que "Ver um exemplo preenchido" sobrescrevia o
+ * rascunho de verdade (corrigido abaixo, no efeito que salva). Quem já foi
+ * afetado tem isso limpo automaticamente na próxima vez que abrir o link.
+ */
+function eraOBugDoExemplo(bruto: string): boolean {
+  return bruto === JSON.stringify(planoDeAmostra)
+}
+
 function lerRascunho(): PlanoDeAula | null {
   try {
     const bruto = localStorage.getItem(CHAVE_RASCUNHO)
     if (!bruto) return null
+    if (eraOBugDoExemplo(bruto)) {
+      localStorage.removeItem(CHAVE_RASCUNHO)
+      return null
+    }
     return { ...planoVazio(), ...(JSON.parse(bruto) as PlanoDeAula) }
   } catch {
     return null
@@ -23,7 +37,17 @@ export function App() {
   const [plano, setPlano] = useState<PlanoDeAula>(() => rascunho ?? planoVazio())
 
   // Rascunho fica no navegador: recarregar a página não perde o trabalho.
+  //
+  // Exceção de propósito: enquanto `plano` for exatamente `planoDeAmostra` (o
+  // professor só clicou em "Ver um exemplo preenchido" para olhar), NADA é
+  // salvo. Sem essa guarda, o clique — que qualquer um dá só por curiosidade —
+  // sobrescrevia o rascunho de verdade, e o link passava a abrir sempre no
+  // exemplo, sem nenhum aviso de como sair dali. Assim que o professor edita
+  // qualquer campo do exemplo, `mudar()` cria um objeto novo (deixa de ser
+  // `=== planoDeAmostra`) e a partir daí ele passa a ser salvo normalmente,
+  // porque virou um rascunho real.
   useEffect(() => {
+    if (plano === planoDeAmostra) return
     try {
       localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(plano))
     } catch {
