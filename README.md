@@ -22,6 +22,7 @@ Outros comandos:
 | `npm run build` | Checagem de tipos + build de produção em `dist/` |
 | `npm run amostra` | Gera `amostras/plano.pdf` fora do navegador, para conferir o layout |
 | `npm run metricas` | Regera `src/pdf/metricas.ts` a partir dos arquivos da fonte |
+| `npm run conferir-bncc -- doc.pdf` | Compara o catálogo da BNCC com um PDF oficial |
 
 ## Como o professor usa
 
@@ -162,6 +163,34 @@ Computação organizam as habilidades por eixo e por ano, sem coluna de competê
 em `HABILIDADES_POR_COMPETENCIA` é uma leitura curricular proposta, isolada num arquivo
 só para ser trocada pela classificação da rede sem mexer em mais nada. Ele decide apenas
 o que aparece na tela — o que sai impresso continua sendo a descrição oficial.
+
+### Procedência do texto e como auditar
+
+O plano imprime o **código e a descrição** da habilidade. Se a descrição divergir do
+documento oficial, o divergente vai impresso no documento institucional — por isso a
+procedência importa.
+
+O texto do catálogo foi transcrito de [computacional.com.br/bncc](https://www.computacional.com.br/bncc/),
+referência conhecida da área, e conferido contra os PDFs de produção do Núcleo WIT nos
+códigos EF69CO02, EF69CO03, EF09CO09 e EF09CO10 — os quatro batem ao pé da letra.
+**Não foi transcrito do anexo oficial do MEC**, que não abre deste ambiente (captcha).
+
+Para auditar contra o documento oficial:
+
+```bash
+npm run conferir-bncc -- caminho/para/BNCC-Computacao.pdf
+```
+
+O script lê o PDF, encontra as habilidades e compara com o catálogo, separando divergência
+de verdade de ruído de extração (aspas tipográficas, hifenização de quebra de linha,
+itálico partido pelo extrator). Sai com código 1 se achar divergência em palavras, então
+serve em CI.
+
+Rodado contra um currículo municipal que reproduz a BNCC, o resultado foi: 91 idênticas,
+5 diferindo só nas aspas e **5 divergências reais** a resolver com o documento oficial em
+mãos (`EF04CO01`, `EF04CO02`, `EF05CO01` — "real ou digital" contra "real e/ou digital";
+`EF07CO11` — "web sites" contra "websites"; `EF69CO01` — "tipo de dado" contra "tipo de
+dados").
 
 Para ampliar (outros componentes curriculares), basta acrescentar entradas em
 `catalogo.ts` copiando a descrição oficial.
