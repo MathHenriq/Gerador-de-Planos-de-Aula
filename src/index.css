@@ -144,8 +144,17 @@ select {
   transition: background 0.15s ease;
 }
 
-.botao:hover:not(:disabled) {
+/*
+ * Só os botões cheios escurecem no hover. Sem o `:not`, esta regra
+ * (0,3,0) vence `.botao.discreto` (0,2,0) e o link "Ver um exemplo
+ * preenchido" vira um bloco verde com o texto invisível.
+ */
+.botao:hover:not(:disabled):not(.secundario):not(.discreto):not(.icone) {
   background: var(--verde-escuro);
+}
+
+.botao.discreto:hover:not(:disabled) {
+  color: var(--verde);
 }
 
 .botao:disabled {
@@ -344,6 +353,11 @@ textarea {
   .revisao {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  /* Numa coluna só, grudar a prévia no topo atrapalha em vez de ajudar. */
+  .previa {
+    position: static;
+  }
 }
 
 .previa {
@@ -382,6 +396,29 @@ textarea {
 .nome-arquivo strong {
   color: var(--tinta);
   font-weight: 600;
+}
+
+/* ── prévia fora da página (celular) ──────────────────────────────────────── */
+
+.previa-fora {
+  border: 1px dashed var(--borda);
+  border-radius: var(--raio);
+  background: var(--branco);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.previa-fora p {
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+
+.previa-fora a {
+  text-decoration: none;
+  display: inline-block;
 }
 
 /* ── avisos ───────────────────────────────────────────────────────────────── */
@@ -646,4 +683,54 @@ textarea {
   margin-top: 24px;
   padding-top: 18px;
   border-top: 1px solid var(--borda);
+}
+
+/* ── telas estreitas ──────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .topo {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .topo img {
+    height: 30px;
+  }
+
+  .topo .titulo {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .topo .subtitulo {
+    font-size: 11px;
+  }
+
+  .topo .botao.discreto {
+    font-size: 12px;
+    text-align: right;
+    max-width: 96px;
+    line-height: 1.2;
+  }
+
+  .pagina {
+    padding: 18px 14px 48px;
+  }
+
+  .cartao {
+    padding: 16px;
+  }
+
+  .previa iframe {
+    height: 60vh;
+    min-height: 340px;
+  }
+
+  .escolas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ordem-escolas .dia {
+    min-width: 62px;
+  }
 }

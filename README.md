@@ -27,6 +27,11 @@ Outros comandos:
 
 Uma tela só: preenche os campos à esquerda, confere a prévia do PDF à direita, baixa.
 
+**No celular** o Chrome do Android não exibe PDF dentro da página — no lugar do documento
+ele desenha um cartão escuro com o identificador do blob. Quando
+`navigator.pdfViewerEnabled` é falso, a prévia embutida dá lugar a um cartão com o botão
+"Abrir a prévia numa aba"; o download continua funcionando normalmente.
+
 A tela avisa quando falta campo obrigatório, quando os blocos da atividade não fecham os
 90 minutos e quando algum texto passou do tamanho da caixa do template.
 
