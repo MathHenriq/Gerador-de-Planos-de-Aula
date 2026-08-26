@@ -118,6 +118,22 @@ oficial ao pé da letra. Todo código digitado passa por `validarCodigos()`:
 - código que não está no catálogo é **descartado**, nunca aproveitado;
 - a descrição usada no PDF é **sempre** a do catálogo, nunca a que foi digitada.
 
+**Só o Ensino Fundamental fica disponível** (104 habilidades: EF01 a EF09, mais os
+agrupados EF15 e EF69). Educação Infantil e Ensino Médio seguem transcritos no arquivo,
+mas fora do catálogo exposto — se alguém digitar um código dessas etapas, a mensagem diz
+que o código existe mas é de outra etapa, em vez de tratá-lo como inválido.
+
+### Competências
+
+O seletor abre filtrado pelas **competências 5 e 6** do Ensino Fundamental, cujo texto
+oficial está em `src/bncc/competencias.ts`.
+
+⚠️ A *associação* entre habilidade e competência **não é oficial**: as tabelas da BNCC
+Computação organizam as habilidades por eixo e por ano, sem coluna de competência. O mapa
+em `HABILIDADES_POR_COMPETENCIA` é uma leitura curricular proposta, isolada num arquivo
+só para ser trocada pela classificação da rede sem mexer em mais nada. Ele decide apenas
+o que aparece na tela — o que sai impresso continua sendo a descrição oficial.
+
 Para ampliar (outros componentes curriculares), basta acrescentar entradas em
 `catalogo.ts` copiando a descrição oficial.
 

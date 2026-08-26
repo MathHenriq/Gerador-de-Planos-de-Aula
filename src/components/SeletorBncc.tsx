@@ -47,14 +47,22 @@ export function SeletorBncc({
   }
 
   function adicionarDigitados() {
-    const { validas, descartados } = validarCodigos(digitado.split(/[\s,;]+/))
+    const { validas, descartados, foraDaEtapa } = validarCodigos(digitado.split(/[\s,;]+/))
     adicionar(validas)
     setDigitado('')
     setErro(
-      descartados.length
-        ? `Não encontrei no catálogo oficial da BNCC: ${descartados.join(', ')}. ` +
+      [
+        foraDaEtapa.length
+          ? `${foraDaEtapa.join(', ')} existe(m) na BNCC, mas fora do Ensino Fundamental — ` +
+            'o gerador trabalha só com essa etapa.'
+          : '',
+        descartados.length
+          ? `Não encontrei no catálogo oficial da BNCC: ${descartados.join(', ')}. ` +
             'Confira o código ou busque pela descrição abaixo.'
-        : '',
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
     )
   }
 

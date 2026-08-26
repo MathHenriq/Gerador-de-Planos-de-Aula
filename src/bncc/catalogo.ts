@@ -195,11 +195,33 @@ const OFICIAIS: Array<[string, string]> = [
   ['EM13CO26', 'Aplicar os conceitos e pressupostos do direito digital em sua conduta e experiências com o cotidiano da cultura digital, bem como na produção e uso de artefatos computacionais.'],
 ]
 
-export const CATALOGO_BNCC: EntradaBncc[] = OFICIAIS.map(([codigo, descricao]) => ({
+/** Códigos do Ensino Fundamental — EF01..EF09, mais os agrupados EF15 e EF69. */
+export function ehEnsinoFundamental(codigo: string): boolean {
+  return /^EF\d{2}CO/.test(codigo)
+}
+
+/**
+ * Catálogo inteiro, como transcrito acima. Serve de registro fiel e para
+ * explicar ao professor por que um código de outra etapa foi recusado.
+ */
+export const CATALOGO_COMPLETO: EntradaBncc[] = OFICIAIS.map(([codigo, descricao]) => ({
   codigo,
   descricao,
   etapa: etapaDe(codigo),
 }))
+
+export const INDICE_COMPLETO: ReadonlyMap<string, EntradaBncc> = new Map(
+  CATALOGO_COMPLETO.map((e) => [e.codigo, e]),
+)
+
+/**
+ * O que o gerador realmente oferece: só o Ensino Fundamental, que é a etapa
+ * atendida pelo Núcleo WIT. Educação Infantil e Ensino Médio ficam de fora —
+ * seguem transcritos acima caso um dia entrem no escopo.
+ */
+export const CATALOGO_BNCC: EntradaBncc[] = CATALOGO_COMPLETO.filter((e) =>
+  ehEnsinoFundamental(e.codigo),
+)
 
 export const INDICE_BNCC: ReadonlyMap<string, EntradaBncc> = new Map(
   CATALOGO_BNCC.map((e) => [e.codigo, e]),

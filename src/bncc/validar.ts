@@ -1,5 +1,5 @@
 import type { Habilidade } from '../types'
-import { CATALOGO_BNCC, INDICE_BNCC, type EntradaBncc } from './catalogo'
+import { CATALOGO_BNCC, INDICE_BNCC, INDICE_COMPLETO, type EntradaBncc } from './catalogo'
 import { competenciasDaHabilidade } from './competencias'
 
 /** "ef69co02", "EF69-CO02", " ef 69 co 02 " → "EF69CO02". */
@@ -17,6 +17,12 @@ export interface ResultadoValidacao {
   validas: Habilidade[]
   /** Códigos rejeitados por não existirem no catálogo oficial. */
   descartados: string[]
+  /**
+   * Códigos que existem na BNCC, mas são de outra etapa (Educação Infantil ou
+   * Ensino Médio). Vale distinguir de um código inexistente: quem digitou não
+   * errou o código, errou a etapa.
+   */
+  foraDaEtapa: string[]
 }
 
 /**
@@ -29,6 +35,7 @@ export interface ResultadoValidacao {
 export function validarCodigos(codigos: string[]): ResultadoValidacao {
   const validas: Habilidade[] = []
   const descartados: string[] = []
+  const foraDaEtapa: string[] = []
   const jaVistos = new Set<string>()
 
   for (const bruto of codigos) {
@@ -38,10 +45,11 @@ export function validarCodigos(codigos: string[]): ResultadoValidacao {
 
     const oficial = INDICE_BNCC.get(codigo)
     if (oficial) validas.push({ codigo: oficial.codigo, descricao: oficial.descricao })
+    else if (INDICE_COMPLETO.has(codigo)) foraDaEtapa.push(codigo)
     else descartados.push(bruto.trim())
   }
 
-  return { validas, descartados }
+  return { validas, descartados, foraDaEtapa }
 }
 
 /**
