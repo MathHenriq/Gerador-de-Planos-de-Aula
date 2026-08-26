@@ -38,8 +38,10 @@ o trabalho.
 Ficam todos em [`src/constants.ts`](src/constants.ts) — é o único arquivo a mexer quando
 a lista mudar.
 
-- **Núcleos** (18): o professor marca quais a aula alcança. A ordem impressa é sempre a
-  da lista oficial, não a ordem de clique, para dois planos da mesma semana saírem iguais.
+- **Núcleos** (18): o professor marca quais a aula alcança, **na ordem da semana** — o
+  primeiro marcado é o de segunda-feira, o segundo é o de terça, e assim por diante. A
+  seleção guarda a ordem de clique e é essa ordem que sai no PDF; quem clicar fora de
+  ordem corrige pelas setas, sem desmarcar tudo.
 - **Cursos** (5): Oficina de Games, Inteligência Artificial, Comunicação Digital,
   Metaverso, Ambientes Inteligentes.
 - **Duração**: derivada de `MINUTOS_TOTAIS` (90) e não editável — é o mesmo número que a

@@ -106,7 +106,10 @@ export function Formulario({
             </Campo>
           </Secao>
 
-          <Secao titulo="Escolas" explica="Marque os núcleos que esta aula alcança.">
+          <Secao
+            titulo="Escolas"
+            explica="Marque na ordem da semana — o primeiro marcado é o de segunda-feira."
+          >
             <SeletorDeEscolas
               escolhidas={plano.escolas}
               aoMudar={(escolas) => aoMudar({ escolas })}

@@ -1,8 +1,10 @@
 import type { PlanoDeAula } from './types'
 
 /**
- * Núcleos atendidos. O professor marca os que a aula alcança — os marcados
- * entram na caixa "Escolas:" do PDF, na ordem desta lista.
+ * Núcleos atendidos. O professor marca os que a aula alcança.
+ *
+ * Esta lista é só o cardápio da interface: no plano, o que vale é a ORDEM EM
+ * QUE ELE MARCA, porque ela é a ordem da semana (primeiro marcado = segunda).
  */
 export const NUCLEOS = [
   'EMEF Renato Rosa',
@@ -36,6 +38,17 @@ export const CURSOS = [
 
 export const CICLOS_SUGERIDOS = ['Sênior', 'Júnior', 'Pleno']
 
+/** A posição do núcleo na seleção diz em que dia o professor vai até ele. */
+export const DIAS_DA_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'] as const
+
+/**
+ * Rótulo da posição na seleção: os cinco primeiros viram dias da semana; do
+ * sexto em diante sobra só o número de ordem, porque a semana acabou.
+ */
+export function rotuloDoDia(posicao: number): string {
+  return DIAS_DA_SEMANA[posicao] ?? `${posicao + 1}º`
+}
+
 /**
  * A aula tem 90 minutos. Este é o número do qual tudo depende: a duração
  * impressa no cabeçalho sai daqui, e a Estrutura da Atividade tem que fechar
@@ -59,6 +72,8 @@ export const MATERIAIS_PADRAO = ['Computador', 'Mouse e teclado', 'Acesso à int
 /**
  * Junta os núcleos escolhidos no formato do documento:
  * "A, B e C." — vírgulas entre todos, "e" antes do último, ponto no fim.
+ *
+ * Preserva a ordem recebida, que é a ordem da semana.
  */
 export function textoDasEscolas(escolas: string[]): string {
   const limpas = escolas.map((e) => e.trim()).filter(Boolean)
