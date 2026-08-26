@@ -5,10 +5,10 @@ import { nomeDoArquivo } from '../nomeDoDocumento'
 import { diagnosticar } from '../pdf/diagnostico'
 import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
 import type { PlanoDeAula } from '../types'
+import { CampoHabilidades } from './CampoHabilidades'
 import { EditorEstrutura } from './EditorEstrutura'
 import { ListaEditavel } from './ListaEditavel'
 import { baixarPdf, PreviaPdf } from './PreviaPdf'
-import { SeletorBncc } from './SeletorBncc'
 import { SeletorDeEscolas } from './SeletorDeEscolas'
 import { Aviso, Campo, Secao } from './ui'
 
@@ -140,9 +140,9 @@ export function Formulario({
 
           <Secao
             titulo="Habilidades da aula (BNCC)"
-            explica="Só entram códigos que existem no catálogo oficial da BNCC Computação — a descrição usada é sempre a oficial."
+            explica='Digite o código e a descrição — o código precisa começar com "EF" (Ensino Fundamental).'
           >
-            <SeletorBncc
+            <CampoHabilidades
               habilidades={plano.habilidades}
               aoMudar={(habilidades) => aoMudar({ habilidades })}
             />

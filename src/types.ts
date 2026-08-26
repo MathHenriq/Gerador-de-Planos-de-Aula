@@ -1,4 +1,4 @@
-/** Uma habilidade da BNCC já validada contra o catálogo oficial. */
+/** Uma habilidade da BNCC, digitada pelo professor (código + descrição). */
 export interface Habilidade {
   codigo: string
   descricao: string

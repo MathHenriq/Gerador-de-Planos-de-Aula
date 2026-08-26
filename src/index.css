@@ -552,37 +552,7 @@ textarea {
   flex: none;
 }
 
-/* ── filtro por competência ───────────────────────────────────────────────── */
-
-.competencias {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.chip {
-  border: 1px solid var(--borda);
-  background: var(--branco);
-  border-radius: 999px;
-  padding: 6px 13px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--tinta-suave);
-  transition: all 0.15s ease;
-}
-
-.chip:hover {
-  border-color: var(--verde);
-}
-
-.chip.ativo {
-  background: var(--verde-fundo);
-  border-color: var(--verde);
-  color: var(--verde-escuro);
-}
-
-/* ── BNCC ─────────────────────────────────────────────────────────────────── */
+/* ── BNCC (habilidades digitadas à mão) ──────────────────────────────────── */
 
 .bncc-escolhida {
   border: 1px solid var(--borda);
@@ -606,48 +576,6 @@ textarea {
   color: var(--tinta-suave);
   flex: 1;
   line-height: 1.45;
-}
-
-.bncc-resultados {
-  border: 1px solid var(--borda);
-  border-radius: 9px;
-  max-height: 340px;
-  overflow-y: auto;
-  background: var(--branco);
-}
-
-.bncc-resultado {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: none;
-  border-bottom: 1px solid var(--borda);
-  background: none;
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.bncc-resultado:last-child {
-  border-bottom: none;
-}
-
-.bncc-resultado:hover:not(:disabled) {
-  background: var(--verde-fundo);
-}
-
-.bncc-resultado:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.bncc-resultado .codigo {
-  font-weight: 700;
-}
-
-.bncc-resultado .etapa {
-  color: var(--tinta-suave);
-  font-size: 11px;
 }
 
 /* ── estrutura da atividade ───────────────────────────────────────────────── */

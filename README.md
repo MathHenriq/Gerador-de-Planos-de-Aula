@@ -22,7 +22,6 @@ Outros comandos:
 | `npm run build` | Checagem de tipos + build de produção em `dist/` |
 | `npm run amostra` | Gera `amostras/plano.pdf` fora do navegador, para conferir o layout |
 | `npm run metricas` | Regera `src/pdf/metricas.ts` a partir dos arquivos da fonte |
-| `npm run conferir-bncc -- doc.pdf` | Compara o catálogo da BNCC com um PDF oficial |
 
 ## Como o professor usa
 
@@ -88,8 +87,7 @@ src/
     metricas.ts     larguras dos glifos da Poppins (GERADO)
     fontes.ts       registro das fontes (o app e o script passam caminhos diferentes)
   bncc/
-    catalogo.ts     catálogo oficial da BNCC Computação
-    validar.ts      validação — nada entra no plano sem estar no catálogo
+    validar.ts      única regra automática: o código da habilidade tem que começar com "EF"
   components/     interface
   constants.ts    núcleos, cursos, duração
   nomeDoDocumento.ts  nome padronizado do arquivo e do título do PDF
@@ -139,63 +137,25 @@ marcados — o seletor avisa na hora da marcação, sem esperar o PDF.
 
 ## BNCC
 
-**Só entram códigos oficiais e verificáveis.**
+**Campo livre — o professor digita o código e a descrição, à mão.**
 
-`src/bncc/catalogo.ts` traz as 141 habilidades da BNCC Computação (complemento à BNCC
-homologado pela Resolução CNE/CEB nº 1, de 4 de outubro de 2022), com a descrição
-oficial ao pé da letra. Todo código digitado passa por `validarCodigos()`:
+Não há mais catálogo embutido nem sugestão de descrição. A única regra automática, em
+[`src/bncc/validar.ts`](src/bncc/validar.ts), é que o código comece com **"EF"** (Ensino
+Fundamental) — `EM13CO10` ou `EI03CO01`, por exemplo, são recusados. Fora essa checagem, o
+texto que sai no PDF é exatamente o que foi digitado: nenhuma descrição é reescrita,
+completada ou comparada contra fonte nenhuma.
 
-- código que não está no catálogo é **descartado**, nunca aproveitado;
-- a descrição usada no PDF é **sempre** a do catálogo, nunca a que foi digitada.
+Essa mudança existe porque a versão anterior tinha um catálogo embutido cuja procedência
+não era o anexo oficial do MEC (checamos e havia divergências reais entre fontes, além de
+uma divisão por "competência 5 e 6" que era leitura própria, não classificação oficial).
+Diante do risco de o documento sair com texto divergente da BNCC, a decisão foi tirar
+qualquer afirmação de autoridade do gerador e deixar a conferência com quem preenche.
 
-**Só o Ensino Fundamental fica disponível** (104 habilidades: EF01 a EF09, mais os
-agrupados EF15 e EF69). Educação Infantil e Ensino Médio seguem transcritos no arquivo,
-mas fora do catálogo exposto — se alguém digitar um código dessas etapas, a mensagem diz
-que o código existe mas é de outra etapa, em vez de tratá-lo como inválido.
+Se um catálogo oficial (confirmado contra o anexo do MEC) entrar no escopo de novo, o
+lugar natural para ele é um arquivo novo em `src/bncc/`, com a mesma função de validação
+trocada por uma que compare contra esse catálogo — sem mexer no resto do formulário.
 
-### Competências
-
-O seletor abre filtrado pelas **competências 5 e 6** do Ensino Fundamental, cujo texto
-oficial está em `src/bncc/competencias.ts`.
-
-⚠️ A *associação* entre habilidade e competência **não é oficial**: as tabelas da BNCC
-Computação organizam as habilidades por eixo e por ano, sem coluna de competência. O mapa
-em `HABILIDADES_POR_COMPETENCIA` é uma leitura curricular proposta, isolada num arquivo
-só para ser trocada pela classificação da rede sem mexer em mais nada. Ele decide apenas
-o que aparece na tela — o que sai impresso continua sendo a descrição oficial.
-
-### Procedência do texto e como auditar
-
-O plano imprime o **código e a descrição** da habilidade. Se a descrição divergir do
-documento oficial, o divergente vai impresso no documento institucional — por isso a
-procedência importa.
-
-O texto do catálogo foi transcrito de [computacional.com.br/bncc](https://www.computacional.com.br/bncc/),
-referência conhecida da área, e conferido contra os PDFs de produção do Núcleo WIT nos
-códigos EF69CO02, EF69CO03, EF09CO09 e EF09CO10 — os quatro batem ao pé da letra.
-**Não foi transcrito do anexo oficial do MEC**, que não abre deste ambiente (captcha).
-
-Para auditar contra o documento oficial:
-
-```bash
-npm run conferir-bncc -- caminho/para/BNCC-Computacao.pdf
-```
-
-O script lê o PDF, encontra as habilidades e compara com o catálogo, separando divergência
-de verdade de ruído de extração (aspas tipográficas, hifenização de quebra de linha,
-itálico partido pelo extrator). Sai com código 1 se achar divergência em palavras, então
-serve em CI.
-
-Rodado contra um currículo municipal que reproduz a BNCC, o resultado foi: 91 idênticas,
-5 diferindo só nas aspas e **5 divergências reais** a resolver com o documento oficial em
-mãos (`EF04CO01`, `EF04CO02`, `EF05CO01` — "real ou digital" contra "real e/ou digital";
-`EF07CO11` — "web sites" contra "websites"; `EF69CO01` — "tipo de dado" contra "tipo de
-dados").
-
-Para ampliar (outros componentes curriculares), basta acrescentar entradas em
-`catalogo.ts` copiando a descrição oficial.
-
-## Deploy
+## Deploy## Deploy
 
 Projeto Vite estático — qualquer host serve, sem back-end e sem variáveis de ambiente. Na
 Vercel, os padrões já funcionam (`npm run build`, saída em `dist`); `vercel.json` só

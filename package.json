@@ -10,8 +10,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "amostra": "tsx --tsconfig tsconfig.scripts.json scripts/render-sample.mts",
-    "metricas": "tsx --tsconfig tsconfig.scripts.json scripts/gerar-metricas.mts",
-    "conferir-bncc": "tsx --tsconfig tsconfig.scripts.json scripts/conferir-bncc.mts"
+    "metricas": "tsx --tsconfig tsconfig.scripts.json scripts/gerar-metricas.mts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.1.6",
@@ -25,7 +24,6 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "fontkit": "^2.0.4",
-    "pdfjs-dist": "^6.2.108",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vite": "^5.4.11"
