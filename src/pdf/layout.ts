@@ -140,3 +140,17 @@ export const HABILIDADES_ESPACO = 18.6
 
 /** Diâmetro do marcador de lista. */
 export const MARCADOR_PX = 4
+
+/**
+ * Folga entre a última linha de texto e a borda de baixo da caixa.
+ *
+ * Pequena de propósito: espelhar o recuo de cima faria a caixa das escolas
+ * encolher a fonte com duas linhas, quando o template original as acomoda no
+ * corpo cheio.
+ */
+export const FOLGA_INFERIOR = 4
+
+/** Altura que sobra para o texto dentro de uma caixa. */
+export function alturaDisponivel(caixa: Caixa, texto: Texto): number {
+  return caixa.altura - texto.padTop - FOLGA_INFERIOR
+}

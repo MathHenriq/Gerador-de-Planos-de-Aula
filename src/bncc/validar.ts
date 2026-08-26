@@ -19,8 +19,7 @@ export interface ResultadoValidacao {
 }
 
 /**
- * Porta de entrada única para qualquer código BNCC que venha de fora
- * (digitado pelo professor ou sugerido pela IA).
+ * Porta de entrada única para qualquer código BNCC digitado pelo professor.
  *
  * Regra crítica: a descrição usada no plano é SEMPRE a do catálogo oficial.
  * Se o código não estiver no catálogo, ele é descartado — nunca "aproveitado"

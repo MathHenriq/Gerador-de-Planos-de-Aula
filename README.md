@@ -1,8 +1,8 @@
 # Gerador de Plano de Aula — Núcleo WIT
 
 Gera o plano de aula semanal do Núcleo WIT em PDF, **no padrão institucional exato**,
-direto no navegador. Sem login, sem cadastro, sem Canva: link único, preenche, revisa,
-baixa.
+direto no navegador. Sem login, sem cadastro, sem Canva: link único, o professor preenche
+o formulário e baixa o arquivo.
 
 O layout não é uma reinterpretação do modelo — as coordenadas foram lidas dos PDFs de
 produção (semanas 27/07 e 31/08) e o resultado é conferido contra eles a cada
@@ -25,17 +25,25 @@ Outros comandos:
 
 ## Como o professor usa
 
-1. **Escolhe o modo.**
-   - *Modo IA*: cola o tema ou o material bruto da aula; a IA separa em tema, objetivos,
-     resumo, metodologia, blocos de tempo e recursos.
-   - *Modo manual*: vai direto para o formulário.
-2. **Revisa.** Os dois modos caem na mesma tela, com tudo editável e a prévia do PDF ao
-   lado. A tela avisa quando falta campo, quando os blocos não fecham 90 minutos e quando
-   algum texto passou do tamanho da caixa.
-3. **Baixa o PDF.** Três páginas fixas, iguais ao modelo.
+Uma tela só: preenche os campos à esquerda, confere a prévia do PDF à direita, baixa.
+
+A tela avisa quando falta campo obrigatório, quando os blocos da atividade não fecham os
+90 minutos e quando algum texto passou do tamanho da caixa do template.
 
 O rascunho fica salvo no navegador (`localStorage`), então recarregar a página não perde
 o trabalho.
+
+## Valores fixos
+
+Ficam todos em [`src/constants.ts`](src/constants.ts) — é o único arquivo a mexer quando
+a lista mudar.
+
+- **Núcleos** (18): o professor marca quais a aula alcança. A ordem impressa é sempre a
+  da lista oficial, não a ordem de clique, para dois planos da mesma semana saírem iguais.
+- **Cursos** (5): Oficina de Games, Inteligência Artificial, Comunicação Digital,
+  Metaverso, Ambientes Inteligentes.
+- **Duração**: derivada de `MINUTOS_TOTAIS` (90) e não editável — é o mesmo número que a
+  Estrutura da Atividade tem que fechar. Mudar a duração é mudar essa constante.
 
 ## Estrutura
 
@@ -45,14 +53,14 @@ src/
     layout.ts       coordenadas absolutas do template (px do design 794×1123)
     PlanoDocument.tsx  o documento em si
     ajuste.ts       encolhe a fonte quando o texto não cabe na caixa
+    diagnostico.ts  quais caixas encolheram e quais vão sair cortadas
     metricas.ts     larguras dos glifos da Poppins (GERADO)
     fontes.ts       registro das fontes (o app e o script passam caminhos diferentes)
   bncc/
     catalogo.ts     catálogo oficial da BNCC Computação
     validar.ts      validação — nada entra no plano sem estar no catálogo
-  ai/cliente.ts   única porta de entrada da IA (o modo manual não passa por aqui)
   components/     interface
-supabase/functions/gerar-plano/  Edge Function que fala com a API da Anthropic
+  constants.ts    núcleos, cursos, duração
 scripts/          geradores e conferência de layout
 ```
 
@@ -89,59 +97,34 @@ produção, com o canal de transparência preservado — não são placeholders.
 
 As caixas do template têm altura fixa. Quando o professor escreve mais do que cabe, o
 gerador reduz o corpo da fonte até caber (até o limite de 62% — abaixo disso fica
-ilegível) e a tela de revisão avisa quais caixas foram apertadas. O conteúdo é recortado
-no limite da caixa, então **nada vaza por cima da borda** — que era exatamente o defeito
-do fluxo antigo no Canva.
+ilegível) e a tela avisa quais caixas foram apertadas. O conteúdo é recortado no limite
+da caixa, então **nada vaza por cima da borda** — que era exatamente o defeito do fluxo
+antigo no Canva.
+
+Quando nem o menor corpo dá conta, o aviso muda de tom: o texto vai sair cortado e
+precisa ser encurtado. É o que acontece na caixa "Escolas:" a partir de 14 núcleos
+marcados — o seletor avisa na hora da marcação, sem esperar o PDF.
 
 ## BNCC
 
-A regra herdada da skill `plano-de-aula-wit` vale aqui: **só entram códigos oficiais e
-verificáveis.**
+**Só entram códigos oficiais e verificáveis.**
 
 `src/bncc/catalogo.ts` traz as 141 habilidades da BNCC Computação (complemento à BNCC
 homologado pela Resolução CNE/CEB nº 1, de 4 de outubro de 2022), com a descrição
-oficial ao pé da letra. Todo código — digitado pelo professor ou sugerido pela IA —
-passa por `validarCodigos()`:
+oficial ao pé da letra. Todo código digitado passa por `validarCodigos()`:
 
 - código que não está no catálogo é **descartado**, nunca aproveitado;
-- a descrição usada no PDF é **sempre** a do catálogo, nunca a que veio de fora.
-
-A sugestão da IA é validada duas vezes: a Edge Function só pode escolher dentro do
-catálogo que recebe, e o cliente revalida a resposta.
+- a descrição usada no PDF é **sempre** a do catálogo, nunca a que foi digitada.
 
 Para ampliar (outros componentes curriculares), basta acrescentar entradas em
 `catalogo.ts` copiando a descrição oficial.
 
-## Modo IA
-
-A IA vive inteira em uma Edge Function do Supabase — a chave da Anthropic nunca chega ao
-navegador. Enquanto ela não estiver configurada, o app funciona normalmente no modo
-manual e o cartão do modo IA aparece desabilitado.
-
-Para ligar:
-
-```bash
-# 1. no projeto Supabase
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-supabase functions deploy gerar-plano
-
-# 2. no .env do front-end (copie de .env.example)
-VITE_IA_ENDPOINT=https://SEU-PROJETO.supabase.co/functions/v1/gerar-plano
-VITE_SUPABASE_ANON_KEY=...
-```
-
-A function expõe duas ações: `extrair` (texto bruto → campos do plano) e `bncc`
-(sugestão de habilidades dentro do catálogo enviado).
-
 ## Deploy
 
-Projeto Vite estático — qualquer host serve. Na Vercel, os padrões já funcionam
-(`npm run build`, saída em `dist`); `vercel.json` só acrescenta o fallback de SPA e o
-cache dos assets. As variáveis `VITE_*` precisam estar definidas no painel do host no
-momento do build.
+Projeto Vite estático — qualquer host serve, sem back-end e sem variáveis de ambiente. Na
+Vercel, os padrões já funcionam (`npm run build`, saída em `dist`); `vercel.json` só
+acrescenta o fallback de SPA e o cache dos assets.
 
 ## Pendências
 
 - [ ] Confirmar com o instrutor o nome exato da fonte do template (hoje: Poppins).
-- [ ] Configurar a chave da Anthropic no Supabase para ligar o modo IA.
-- [ ] Confirmar se o campo **Curso** é sempre "IA" ou se varia.

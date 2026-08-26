@@ -5,8 +5,8 @@
  *
  * REGRA CRÍTICA DO PROJETO: só entram no plano de aula códigos que existem
  * aqui, com a descrição oficial exata. Nada de código inventado, nada de
- * descrição reescrita. Se a IA sugerir um código que não está nesta lista,
- * a sugestão é descartada (ver `validarCodigos` em ./validar.ts).
+ * descrição reescrita. Código digitado que não está nesta lista é descartado
+ * (ver `validarCodigos` em ./validar.ts).
  *
  * Para ampliar o catálogo (ex.: BNCC de outros componentes), basta acrescentar
  * as entradas abaixo copiando a descrição oficial *ao pé da letra*.

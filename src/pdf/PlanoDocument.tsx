@@ -2,7 +2,7 @@ import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/render
 import type { Style } from '@react-pdf/types'
 import type { ReactNode } from 'react'
 
-import { ESCOLAS_PARCEIRAS } from '../constants'
+import { DURACAO, textoDasEscolas } from '../constants'
 import type { BlocoAtividade, Habilidade, PlanoDeAula } from '../types'
 import { escalaParaCaber, estimarLinhas, type Paragrafo } from './ajuste'
 import { FAMILIA } from './fontes'
@@ -17,6 +17,7 @@ import {
   MARCA_WIT,
   MARCADOR_PX,
   PAGINA_PT,
+  alturaDisponivel,
   ROTULOS,
   TEXTOS,
   TEXTO_CABECALHO,
@@ -63,11 +64,6 @@ function posicao(c: Caixa): Style {
 
 function larguraUtil(c: Caixa, t: Texto): number {
   return c.largura - t.padLeft - t.padRight
-}
-
-/** Altura livre para o texto dentro da caixa (sobra uma folga parecida embaixo). */
-function alturaUtil(c: Caixa, t: Texto): number {
-  return c.altura - t.padTop - Math.max(t.padTop, 6)
 }
 
 function Moldura({ caixa }: { caixa: Caixa }) {
@@ -125,7 +121,7 @@ function CaixaParagrafo({
       entrelinha: texto.entrelinha,
       maiuscula,
     },
-    alturaUtil(caixa, texto),
+    alturaDisponivel(caixa, texto),
   )
 
   return (
@@ -204,7 +200,7 @@ function CaixaLista({ caixa, texto, itens, maiuscula }: ConteudoProps & { itens:
       entrelinha: texto.entrelinha,
       maiuscula,
     },
-    alturaUtil(caixa, texto),
+    alturaDisponivel(caixa, texto),
   )
 
   const fonte = texto.fonte * escala
@@ -252,7 +248,7 @@ function CaixaHabilidades({
       entrelinha: texto.entrelinha,
       maiuscula: true,
     },
-    alturaUtil(caixa, texto),
+    alturaDisponivel(caixa, texto),
   )
 
   return (
@@ -316,7 +312,7 @@ function CaixaEstrutura({ caixa, texto, blocos }: ConteudoProps & { blocos: Bloc
       entrelinha: texto.entrelinha,
       maiuscula: true,
     },
-    alturaUtil(caixa, texto),
+    alturaDisponivel(caixa, texto),
   )
 
   const fonte = texto.fonte * escala
@@ -509,7 +505,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           caixa={CAIXAS_CABECALHO.duracao}
           {...TEXTO_CABECALHO.duracao}
           rotulo="Duração:"
-          valor={` ${plano.duracao}`}
+          valor={` ${DURACAO}`}
           valorRegular
         />
         <CampoCabecalho
@@ -530,7 +526,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
         <CaixaParagrafo
           caixa={CAIXAS.escolas}
           texto={TEXTOS.escolas}
-          conteudo={ESCOLAS_PARCEIRAS}
+          conteudo={textoDasEscolas(plano.escolas)}
           peso={500}
         />
 

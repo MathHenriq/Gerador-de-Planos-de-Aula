@@ -1,4 +1,3 @@
-import { DURACAO_PADRAO } from './constants'
 import type { PlanoDeAula } from './types'
 
 /**
@@ -7,12 +6,18 @@ import type { PlanoDeAula } from './types'
  *  - exemplo carregável na interface ("preencher com exemplo").
  */
 export const planoDeAmostra: PlanoDeAula = {
-  curso: 'IA',
+  curso: 'Inteligência Artificial',
   ciclo: 'Sênior',
   semana: '31/08 - 04/09',
   conteudo: 'Criação do Front-End do projeto',
   professor: 'Matheus H.',
-  duracao: DURACAO_PADRAO,
+  escolas: [
+    'EMEIEF Benedito Adherbal Farbo',
+    'EMEF Armando Cavazza',
+    'EMEIEF Vereadora Elisabet Titto',
+    'EMEIEF José Emidio de Aguiar',
+    'EMEF Júlio Gomes Camisão',
+  ],
 
   temaDaAula: 'Produção do projeto',
 

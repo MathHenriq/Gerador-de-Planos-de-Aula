@@ -416,6 +416,39 @@ textarea {
   color: var(--alerta);
 }
 
+/* ── escolas ──────────────────────────────────────────────────────────────── */
+
+.escolas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: var(--branco);
+}
+
+.escola {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.escola:hover {
+  background: var(--verde-fundo);
+}
+
+.escola input {
+  margin: 2px 0 0;
+  accent-color: var(--verde);
+  flex: none;
+}
+
 /* ── BNCC ─────────────────────────────────────────────────────────────────── */
 
 .bncc-escolhida {

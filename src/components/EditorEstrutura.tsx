@@ -1,5 +1,5 @@
-import { somaDosBlocos } from '../ai/cliente'
 import { MINUTOS_TOTAIS } from '../constants'
+import { somaDosBlocos } from '../plano'
 import type { BlocoAtividade } from '../types'
 import { ListaEditavel } from './ListaEditavel'
 

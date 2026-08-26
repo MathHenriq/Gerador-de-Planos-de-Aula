@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 
-import { ErroDeIA, iaConfigurada, sugerirBncc } from '../ai/cliente'
 import { buscarNoCatalogo, validarCodigos } from '../bncc/validar'
 import type { Habilidade } from '../types'
 import { Aviso } from './ui'
@@ -8,28 +7,20 @@ import { Aviso } from './ui'
 /**
  * Escolha das habilidades da BNCC.
  *
- * Três caminhos, todos passando pela mesma validação:
- *  - digitar o código direto (quem já sabe qual é);
- *  - buscar por palavra no catálogo oficial;
- *  - pedir sugestão para a IA.
- *
- * Em qualquer um deles a descrição usada é sempre a oficial do catálogo.
+ * Dois caminhos, os dois passando pela mesma validação: digitar o código direto
+ * (para quem já sabe qual é) ou buscar por palavra no catálogo oficial. Em
+ * qualquer um deles a descrição usada é sempre a oficial do catálogo.
  */
 export function SeletorBncc({
   habilidades,
   aoMudar,
-  contexto,
 }: {
   habilidades: Habilidade[]
   aoMudar: (h: Habilidade[]) => void
-  /** Tema + conteúdo da aula, usado para a sugestão da IA. */
-  contexto: string
 }) {
   const [busca, setBusca] = useState('')
   const [digitado, setDigitado] = useState('')
   const [erro, setErro] = useState('')
-  const [nota, setNota] = useState('')
-  const [carregando, setCarregando] = useState(false)
 
   const resultados = useMemo(() => buscarNoCatalogo(busca, 30), [busca])
   const escolhidos = new Set(habilidades.map((h) => h.codigo))
@@ -50,35 +41,6 @@ export function SeletorBncc({
             'Confira o código ou busque pela descrição abaixo.'
         : '',
     )
-    setNota('')
-  }
-
-  async function pedirSugestao() {
-    setCarregando(true)
-    setErro('')
-    setNota('')
-    try {
-      const { validas, descartados, justificativa } = await sugerirBncc(contexto)
-      adicionar(validas)
-      if (validas.length === 0 && descartados.length === 0) {
-        setNota('A IA não encontrou uma habilidade do catálogo que combine com esta aula.')
-      } else {
-        setNota(
-          [
-            justificativa,
-            descartados.length
-              ? `Descartei ${descartados.length} sugestão(ões) que não constam do catálogo oficial.`
-              : '',
-          ]
-            .filter(Boolean)
-            .join(' '),
-        )
-      }
-    } catch (e) {
-      setErro(e instanceof ErroDeIA ? e.message : 'Não consegui pedir a sugestão agora.')
-    } finally {
-      setCarregando(false)
-    }
   }
 
   return (
@@ -136,23 +98,9 @@ export function SeletorBncc({
         >
           Adicionar código
         </button>
-        <button
-          type="button"
-          className="botao secundario"
-          onClick={pedirSugestao}
-          disabled={carregando || !iaConfigurada() || !contexto.trim()}
-          title={
-            iaConfigurada()
-              ? 'A IA sugere habilidades apenas dentro do catálogo oficial'
-              : 'Disponível quando a chave de IA estiver configurada'
-          }
-        >
-          {carregando ? 'Consultando…' : 'Sugerir com IA'}
-        </button>
       </div>
 
       {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
-      {nota ? <Aviso tipo="info">{nota}</Aviso> : null}
 
       {busca.trim() ? (
         <div className="bncc-resultados">

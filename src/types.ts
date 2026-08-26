@@ -19,7 +19,8 @@ export interface PlanoDeAula {
   semana: string
   conteudo: string
   professor: string
-  duracao: string
+  /** Núcleos escolhidos pelo professor, entre os de `NUCLEOS`. */
+  escolas: string[]
 
   // Página 1
   temaDaAula: string
@@ -35,7 +36,3 @@ export interface PlanoDeAula {
   // Página 3
   recursos: string[]
 }
-
-export type ModoEntrada = 'ia' | 'manual'
-
-export type Etapa = 'escolha' | 'entrada-ia' | 'revisao'

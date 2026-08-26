@@ -1,28 +1,27 @@
 import { useState } from 'react'
 
-import { fechaNoTempoDaAula, somaDosBlocos } from '../ai/cliente'
-import { CICLOS_SUGERIDOS, ESCOLAS_PARCEIRAS, MINUTOS_TOTAIS } from '../constants'
-import { caixasApertadas } from '../pdf/diagnostico'
+import { CICLOS_SUGERIDOS, CURSOS, DURACAO, MINUTOS_TOTAIS } from '../constants'
+import { diagnosticar } from '../pdf/diagnostico'
+import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
 import type { PlanoDeAula } from '../types'
 import { EditorEstrutura } from './EditorEstrutura'
 import { ListaEditavel } from './ListaEditavel'
 import { baixarPdf, PreviaPdf } from './PreviaPdf'
 import { SeletorBncc } from './SeletorBncc'
+import { SeletorDeEscolas } from './SeletorDeEscolas'
 import { Aviso, Campo, Secao } from './ui'
 
 /**
- * Tela única de revisão — é onde os dois modos de entrada se encontram.
- * Tudo é editável, e a prévia do PDF ao lado mostra o resultado real.
+ * Tela única do gerador: o professor preenche, confere na prévia ao lado e
+ * baixa o PDF.
  */
-export function Revisao({
+export function Formulario({
   plano,
   aoMudar,
-  aoVoltar,
   aoLimpar,
 }: {
   plano: PlanoDeAula
   aoMudar: (mudanca: Partial<PlanoDeAula>) => void
-  aoVoltar: () => void
   aoLimpar: () => void
 }) {
   const [baixando, setBaixando] = useState(false)
@@ -30,7 +29,7 @@ export function Revisao({
 
   const faltando = camposObrigatoriosFaltando(plano)
   const tempoOk = fechaNoTempoDaAula(plano.estrutura)
-  const apertadas = caixasApertadas(plano)
+  const { apertadas, estouradas } = diagnosticar(plano)
 
   async function baixar() {
     setBaixando(true)
@@ -46,13 +45,10 @@ export function Revisao({
 
   return (
     <div className="pagina">
-      <button type="button" className="botao discreto" onClick={aoVoltar}>
-        ← Voltar
-      </button>
-
-      <h1 style={{ fontSize: 24, margin: '8px 0 4px' }}>Revise e gere o PDF</h1>
+      <h1 style={{ fontSize: 24, margin: '0 0 4px' }}>Plano de aula da semana</h1>
       <p style={{ marginBottom: 22, color: 'var(--tinta-suave)' }}>
-        A prévia à direita é o arquivo final — o mesmo layout institucional de sempre.
+        Preencha os campos e baixe o PDF. A prévia à direita é o arquivo final — o mesmo layout
+        institucional de sempre.
       </p>
 
       <div className="revisao">
@@ -60,20 +56,22 @@ export function Revisao({
           <Secao titulo="Cabeçalho">
             <div className="linha">
               <Campo rotulo="Curso">
-                <input
-                  type="text"
-                  value={plano.curso}
-                  onChange={(e) => aoMudar({ curso: e.target.value })}
-                />
+                <select value={plano.curso} onChange={(e) => aoMudar({ curso: e.target.value })}>
+                  {CURSOS.map((c) => (
+                    <option value={c} key={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </Campo>
               <Campo rotulo="Ciclo">
                 <input
                   type="text"
-                  list="ciclos-revisao"
+                  list="ciclos"
                   value={plano.ciclo}
                   onChange={(e) => aoMudar({ ciclo: e.target.value })}
                 />
-                <datalist id="ciclos-revisao">
+                <datalist id="ciclos">
                   {CICLOS_SUGERIDOS.map((c) => (
                     <option value={c} key={c} />
                   ))}
@@ -90,15 +88,12 @@ export function Revisao({
                 <input
                   type="text"
                   value={plano.professor}
+                  placeholder="Seu nome"
                   onChange={(e) => aoMudar({ professor: e.target.value })}
                 />
               </Campo>
-              <Campo rotulo="Duração">
-                <input
-                  type="text"
-                  value={plano.duracao}
-                  onChange={(e) => aoMudar({ duracao: e.target.value })}
-                />
+              <Campo rotulo="Duração" dica="fixa em 90 min">
+                <input type="text" value={DURACAO} readOnly />
               </Campo>
             </div>
 
@@ -109,10 +104,13 @@ export function Revisao({
                 onChange={(e) => aoMudar({ conteudo: e.target.value })}
               />
             </Campo>
+          </Secao>
 
-            <Campo rotulo="Escolas parceiras" dica="texto institucional, não editável">
-              <textarea rows={2} value={ESCOLAS_PARCEIRAS} readOnly />
-            </Campo>
+          <Secao titulo="Escolas" explica="Marque os núcleos que esta aula alcança.">
+            <SeletorDeEscolas
+              escolhidas={plano.escolas}
+              aoMudar={(escolas) => aoMudar({ escolas })}
+            />
           </Secao>
 
           <Secao titulo="Tema da aula">
@@ -143,9 +141,6 @@ export function Revisao({
             <SeletorBncc
               habilidades={plano.habilidades}
               aoMudar={(habilidades) => aoMudar({ habilidades })}
-              contexto={[plano.temaDaAula, plano.conteudo, plano.resumo]
-                .filter(Boolean)
-                .join('. ')}
             />
           </Secao>
 
@@ -217,8 +212,15 @@ export function Revisao({
 
           {!tempoOk ? (
             <Aviso tipo="atencao">
-              A estrutura da atividade soma {somaDosBlocos(plano.estrutura)} min — o padrão da aula
-              é {MINUTOS_TOTAIS} min.
+              A estrutura da atividade soma {somaDosBlocos(plano.estrutura)} min — toda aula tem{' '}
+              {MINUTOS_TOTAIS} min.
+            </Aviso>
+          ) : null}
+
+          {estouradas.length ? (
+            <Aviso tipo="erro">
+              O texto de <strong>{estouradas.join(', ')}</strong> não cabe na caixa nem no menor
+              tamanho de fonte, e vai sair cortado no PDF. Encurte o conteúdo.
             </Aviso>
           ) : null}
 
@@ -248,6 +250,7 @@ function camposObrigatoriosFaltando(plano: PlanoDeAula): string[] {
   const faltando: string[] = []
   if (!plano.semana.trim()) faltando.push('semana')
   if (!plano.professor.trim()) faltando.push('professor')
+  if (plano.escolas.length === 0) faltando.push('escolas')
   if (!plano.temaDaAula.trim()) faltando.push('tema da aula')
   if (!plano.objetivos.some((o) => o.trim())) faltando.push('objetivos')
   if (plano.habilidades.length === 0) faltando.push('habilidades da BNCC')
