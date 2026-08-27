@@ -60,6 +60,19 @@ export function App() {
     [],
   )
 
+  /**
+   * Limpa a página. Fica em dois lugares — aqui no cabeçalho, sempre visível
+   * sem precisar rolar, e de novo no rodapé do formulário — porque quem se
+   * sente "preso" num rascunho antigo precisa achar a saída na hora. Pede
+   * confirmação porque agora é fácil clicar sem querer, bem ao lado do botão
+   * do exemplo.
+   */
+  const limpar = useCallback(() => {
+    if (confirm('Isso apaga tudo o que você preencheu nesta página. Continuar?')) {
+      setPlano(planoVazio())
+    }
+  }, [])
+
   return (
     <>
       <header className="topo">
@@ -72,9 +85,12 @@ export function App() {
         <button type="button" className="botao discreto" onClick={() => setPlano(planoDeAmostra)}>
           Ver um exemplo preenchido
         </button>
+        <button type="button" className="botao discreto" onClick={limpar}>
+          Limpar página
+        </button>
       </header>
 
-      <Formulario plano={plano} aoMudar={mudar} aoLimpar={() => setPlano(planoVazio())} />
+      <Formulario plano={plano} aoMudar={mudar} aoLimpar={limpar} />
     </>
   )
 }

@@ -36,7 +36,12 @@ A tela avisa quando falta campo obrigatório, quando os blocos da atividade não
 90 minutos e quando algum texto passou do tamanho da caixa do template.
 
 O rascunho fica salvo no navegador (`localStorage`), então recarregar a página não perde
-o trabalho.
+o trabalho — quem sai e volta encontra os campos exatamente como deixou, editáveis
+normalmente. Isso já foi confundido com "o link travou no exemplo" (era um bug real, e foi
+corrigido — ver `App.tsx`); se acontecer de novo, ou se o rascunho salvo for de outra
+pessoa, o botão **"Limpar página"** no cabeçalho — visível assim que a página abre, sem
+precisar rolar — reseta tudo (pede confirmação, porque apaga o que estiver preenchido). O
+mesmo botão também existe no rodapé do formulário, para quem já chegou até o fim.
 
 ## Valores fixos
 
@@ -47,8 +52,12 @@ a lista mudar.
   primeiro marcado é o de segunda-feira, o segundo é o de terça, e assim por diante. A
   seleção guarda a ordem de clique e é essa ordem que sai no PDF; quem clicar fora de
   ordem corrige pelas setas, sem desmarcar tudo.
-- **Cursos** (5): Oficina de Games, Inteligência Artificial, Comunicação Digital,
-  Metaverso, Ambientes Inteligentes.
+- **Cursos** (6): Oficina de Games, Inteligência Artificial, Comunicação Digital,
+  Metaverso, Ambientes Inteligentes, Integral.
+- **Ciclos** (`CICLOS`): Trainee, Júnior e Sênior — a trilha do Núcleo WIT — mais 1º a 9º
+  ano, para as turmas do Integral, que se organizam por ano escolar em vez de trilha.
+  Campo é um `<select>` fechado (era texto livre com sugestões antes; virou lista fixa
+  porque nem todo navegador mostra as sugestões de um `<datalist>` de forma confiável).
 - **Duração**: 90 ou 100 minutos, escolha do professor no cabeçalho
   (`DURACOES_DISPONIVEIS`). É o mesmo número que a Estrutura da Atividade tem que fechar —
   trocar a duração não redistribui os blocos automaticamente, então o aviso de "faltam N

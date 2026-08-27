@@ -619,6 +619,7 @@ textarea {
   .topo {
     padding: 10px 14px;
     gap: 10px;
+    flex-wrap: wrap;
   }
 
   .topo img {

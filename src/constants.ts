@@ -34,9 +34,27 @@ export const CURSOS = [
   'Comunicação Digital',
   'Metaverso',
   'Ambientes Inteligentes',
+  'Integral',
 ] as const
 
-export const CICLOS_SUGERIDOS = ['Sênior', 'Júnior', 'Pleno']
+/**
+ * Ciclos possíveis. Trainee/Júnior/Sênior são a trilha do Núcleo WIT; os anos
+ * (1º a 9º) são para o Integral, que organiza as turmas por ano escolar.
+ */
+export const CICLOS = [
+  'Trainee',
+  'Júnior',
+  'Sênior',
+  '1º ano',
+  '2º ano',
+  '3º ano',
+  '4º ano',
+  '5º ano',
+  '6º ano',
+  '7º ano',
+  '8º ano',
+  '9º ano',
+] as const
 
 /** A posição do núcleo na seleção diz em que dia o professor vai até ele. */
 export const DIAS_DA_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'] as const

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { CICLOS_SUGERIDOS, CURSOS, DURACOES_DISPONIVEIS, formatarDuracao } from '../constants'
+import { CICLOS, CURSOS, DURACOES_DISPONIVEIS, formatarDuracao } from '../constants'
 import { nomeDoArquivo } from '../nomeDoDocumento'
 import { diagnosticar } from '../pdf/diagnostico'
 import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
@@ -66,17 +66,13 @@ export function Formulario({
                 </select>
               </Campo>
               <Campo rotulo="Ciclo">
-                <input
-                  type="text"
-                  list="ciclos"
-                  value={plano.ciclo}
-                  onChange={(e) => aoMudar({ ciclo: e.target.value })}
-                />
-                <datalist id="ciclos">
-                  {CICLOS_SUGERIDOS.map((c) => (
-                    <option value={c} key={c} />
+                <select value={plano.ciclo} onChange={(e) => aoMudar({ ciclo: e.target.value })}>
+                  {CICLOS.map((c) => (
+                    <option value={c} key={c}>
+                      {c}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </Campo>
               <Campo rotulo="Semana" dica="ex.: 31/08 - 04/09">
                 <input
