@@ -274,6 +274,8 @@ select {
 }
 
 input[type='text'],
+input[type='email'],
+input[type='password'],
 textarea,
 select {
   width: 100%;
@@ -285,6 +287,8 @@ select {
 }
 
 input[type='text']:focus,
+input[type='email']:focus,
+input[type='password']:focus,
 textarea:focus,
 select:focus {
   outline: 2px solid var(--verde);
@@ -671,4 +675,134 @@ textarea {
   .ordem-escolas .dia {
     min-width: 62px;
   }
+}
+
+/* ── login/cadastro ───────────────────────────────────────────────────────── */
+
+.auth {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-cartao {
+  width: 100%;
+  max-width: 380px;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 28px;
+}
+
+.auth-cartao h1 {
+  font-size: 20px;
+}
+
+.auth-cartao .subtitulo {
+  font-size: 13px;
+  color: var(--tinta-suave);
+  margin-bottom: 20px;
+}
+
+.auth-abas {
+  display: flex;
+  gap: 4px;
+  background: var(--fundo);
+  border-radius: 9px;
+  padding: 4px;
+  margin-bottom: 20px;
+}
+
+.auth-abas button {
+  flex: 1;
+  border: none;
+  background: none;
+  border-radius: 7px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.auth-abas button.ativa {
+  background: var(--branco);
+  color: var(--tinta);
+  box-shadow: var(--sombra);
+}
+
+.auth-cartao form .botao {
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* ── modal "meus planos" ──────────────────────────────────────────────────── */
+
+.modal-fundo {
+  position: fixed;
+  inset: 0;
+  background: rgb(22 33 27 / 45%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20;
+}
+
+.modal-cartao {
+  width: 100%;
+  max-width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--branco);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 22px;
+}
+
+.modal-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.lista-planos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista-planos li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+
+.lista-planos strong {
+  display: block;
+  font-size: 14px;
+}
+
+.lista-planos-data {
+  display: block;
+  font-size: 12px;
+  color: var(--tinta-suave);
+  margin-top: 2px;
+}
+
+.lista-planos-acoes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
 }

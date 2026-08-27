@@ -1,8 +1,8 @@
 # Gerador de Plano de Aula — Núcleo WIT
 
 Gera o plano de aula semanal do Núcleo WIT em PDF, **no padrão institucional exato**,
-direto no navegador. Sem login, sem cadastro, sem Canva: link único, o professor preenche
-o formulário e baixa o arquivo.
+direto no navegador. Sem Canva: o professor entra com e-mail e senha, preenche o
+formulário e baixa o arquivo — e pode salvar o plano na própria conta para editar depois.
 
 O layout não é uma reinterpretação do modelo — as coordenadas foram lidas dos PDFs de
 produção (semanas 27/07 e 31/08) e o resultado é conferido contra eles a cada
@@ -38,13 +38,14 @@ ele desenha um cartão escuro com o identificador do blob. Quando
 A tela avisa quando falta campo obrigatório, quando os blocos da atividade não fecham os
 90 minutos e quando algum texto passou do tamanho da caixa do template.
 
-O rascunho fica salvo no navegador (`localStorage`), então recarregar a página não perde
-o trabalho — quem sai e volta encontra os campos exatamente como deixou, editáveis
-normalmente. Isso já foi confundido com "o link travou no exemplo" (era um bug real, e foi
-corrigido — ver `App.tsx`); se acontecer de novo, ou se o rascunho salvo for de outra
-pessoa, o botão **"Limpar página"** no cabeçalho — visível assim que a página abre, sem
-precisar rolar — reseta tudo (pede confirmação, porque apaga o que estiver preenchido). O
-mesmo botão também existe no rodapé do formulário, para quem já chegou até o fim.
+O rascunho do que está sendo editado fica salvo no navegador (`localStorage`, isolado por
+professor — ver [Login e planos salvos](#login-e-planos-salvos)), então recarregar a página
+não perde o trabalho — quem sai e volta encontra os campos exatamente como deixou,
+editáveis normalmente. Isso já foi confundido com "o link travou no exemplo" (era um bug
+real, e foi corrigido — ver `App.tsx`); se acontecer de novo, o botão **"Limpar página"** no
+cabeçalho — visível assim que a página abre, sem precisar rolar — reseta tudo (pede
+confirmação, porque apaga o que estiver preenchido). O mesmo botão também existe no rodapé
+do formulário, para quem já chegou até o fim.
 
 ## Valores fixos
 
@@ -90,6 +91,32 @@ Regras, em [`src/nomeDoDocumento.ts`](src/nomeDoDocumento.ts):
 O mesmo nome vai nos metadados do PDF (o título que o leitor mostra), e a tela exibe o
 nome final ao lado do botão de baixar.
 
+## Login e planos salvos
+
+O gerador usa [Supabase](https://supabase.com) só para login e para guardar os planos
+salvos — a geração do PDF continua 100% no navegador, sem servidor nenhum no meio.
+
+- **Login**: e-mail e senha (`supabase.auth`). Não tem link mágico nem Google — decisão
+  do instrutor, mais previsível pro professor. Por padrão o Supabase pede confirmação por
+  e-mail antes do primeiro login; se isso travar o cadastro (e-mail não chega, ou demora),
+  dá pra desligar em Authentication → Providers → Email → "Confirm email", no painel do
+  projeto.
+- **Planos salvos**: tabela `planos` (`professor_id`, `dados` — o `PlanoDeAula` inteiro
+  como JSON —, `criado_em`, `atualizado_em`), com RLS restringindo cada professor às
+  próprias linhas. O botão **"Salvar na minha conta"**, ao lado de "Baixar PDF", grava o
+  plano em edição; se ele veio de "Meus planos", o botão vira "Atualizar plano salvo" e
+  sobrescreve a mesma linha em vez de criar outra. O botão **"Meus planos"**, no cabeçalho,
+  lista os planos salvos (mais recente primeiro) para abrir ou excluir.
+- **Variáveis de ambiente**: `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (ver
+  `.env.example`) — a "anon/publishable key" não é secreta, foi feita para ir no código do
+  site; quem protege os dados é a regra de RLS no banco, não o segredo da chave. Sem essas
+  variáveis configuradas, `src/supabase/client.ts` fica `null` e a tela de login mostra um
+  aviso em vez de travar.
+- **Onde mexer**: `src/supabase/client.ts` (o cliente), `src/supabase/planos.ts` (as
+  funções de salvar/listar/excluir), `src/components/Auth.tsx` (a tela de login/cadastro),
+  `src/components/MeusPlanos.tsx` (a lista). O esquema do banco (tabela + RLS + trigger de
+  `atualizado_em`) está aplicado direto no projeto Supabase, não em arquivo neste repo.
+
 ## Estrutura
 
 ```
@@ -103,8 +130,11 @@ src/
     fontes.ts       registro das fontes (o app e o script passam caminhos diferentes)
   bncc/
     validar.ts      única regra automática: o código da habilidade tem que começar com "EF"
-  components/     interface
-  constants.ts    núcleos, cursos, duração
+  supabase/
+    client.ts       cliente do Supabase (login + banco)
+    planos.ts       salvar/listar/excluir planos da conta do professor
+  components/     interface (inclui Auth.tsx e MeusPlanos.tsx)
+  constants.ts    núcleos, cursos, ciclos, duração
   nomeDoDocumento.ts  nome padronizado do arquivo e do título do PDF
 scripts/          geradores e conferência de layout
 ```
@@ -185,10 +215,14 @@ trocada por uma que compare contra esse catálogo — sem mexer no resto do form
 
 ## Deploy
 
-Projeto Vite estático — qualquer host serve, sem back-end e sem variáveis de ambiente. Na
-Vercel, os padrões já funcionam (`npm run build`, saída em `dist`); `vercel.json` só
-acrescenta o fallback de SPA e o cache dos assets.
+Projeto Vite estático — qualquer host serve, sem back-end próprio (o Supabase é hospedado
+à parte). Na Vercel, os padrões já funcionam (`npm run build`, saída em `dist`);
+`vercel.json` só acrescenta o fallback de SPA e o cache dos assets. É preciso configurar
+`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` nas variáveis de ambiente do projeto na
+Vercel (Settings → Environment Variables) — sem elas, o build sai sem login funcionando.
 
 ## Pendências
 
 - [ ] Confirmar com o instrutor o nome exato da fonte do template (hoje: Poppins).
+- [ ] Decidir se a confirmação por e-mail do Supabase fica ligada ou não (ver
+      [Login e planos salvos](#login-e-planos-salvos)).

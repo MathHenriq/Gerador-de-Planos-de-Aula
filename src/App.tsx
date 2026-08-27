@@ -1,29 +1,28 @@
+import type { Session } from '@supabase/supabase-js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import logoMicroKa from './assets/logo-micro-ka.png'
+import { Auth } from './components/Auth'
 import { Formulario } from './components/Formulario'
+import { MeusPlanos } from './components/MeusPlanos'
 import { planoVazio } from './constants'
 import { planoDeAmostra } from './planoDeAmostra'
+import { supabase } from './supabase/client'
+import { salvarPlano, type PlanoSalvo } from './supabase/planos'
 import type { PlanoDeAula } from './types'
 
-const CHAVE_RASCUNHO = 'nucleo-wit:plano-de-aula'
+const PREFIXO_RASCUNHO = 'nucleo-wit:plano-de-aula'
 
-/**
- * Se o que está salvo é byte-a-byte o plano de exemplo, não é um rascunho —
- * é sequela do bug em que "Ver um exemplo preenchido" sobrescrevia o
- * rascunho de verdade (corrigido abaixo, no efeito que salva). Quem já foi
- * afetado tem isso limpo automaticamente na próxima vez que abrir o link.
- */
 function eraOBugDoExemplo(bruto: string): boolean {
   return bruto === JSON.stringify(planoDeAmostra)
 }
 
-function lerRascunho(): PlanoDeAula | null {
+function lerRascunho(chave: string): PlanoDeAula | null {
   try {
-    const bruto = localStorage.getItem(CHAVE_RASCUNHO)
+    const bruto = localStorage.getItem(chave)
     if (!bruto) return null
     if (eraOBugDoExemplo(bruto)) {
-      localStorage.removeItem(CHAVE_RASCUNHO)
+      localStorage.removeItem(chave)
       return null
     }
     return { ...planoVazio(), ...(JSON.parse(bruto) as PlanoDeAula) }
@@ -32,45 +31,45 @@ function lerRascunho(): PlanoDeAula | null {
   }
 }
 
-export function App() {
-  const rascunho = useMemo(lerRascunho, [])
+/** Tela principal, depois de confirmado quem está logado. */
+function AppLogado({ sessao }: { sessao: Session }) {
+  // O rascunho fica isolado por professor (userId), não só por navegador —
+  // num computador da escola, mais de um professor pode logar no mesmo
+  // navegador, e ninguém deve ver o rascunho de quem usou antes.
+  const chaveRascunho = `${PREFIXO_RASCUNHO}:${sessao.user.id}`
+  const rascunho = useMemo(() => lerRascunho(chaveRascunho), [chaveRascunho])
   const [plano, setPlano] = useState<PlanoDeAula>(() => rascunho ?? planoVazio())
+  const [planoAtualId, setPlanoAtualId] = useState<string | null>(null)
+  const [mostrarMeusPlanos, setMostrarMeusPlanos] = useState(false)
 
-  // Rascunho fica no navegador: recarregar a página não perde o trabalho.
-  //
-  // Exceção de propósito: enquanto `plano` for exatamente `planoDeAmostra` (o
-  // professor só clicou em "Ver um exemplo preenchido" para olhar), NADA é
-  // salvo. Sem essa guarda, o clique — que qualquer um dá só por curiosidade —
-  // sobrescrevia o rascunho de verdade, e o link passava a abrir sempre no
-  // exemplo, sem nenhum aviso de como sair dali. Assim que o professor edita
-  // qualquer campo do exemplo, `mudar()` cria um objeto novo (deixa de ser
-  // `=== planoDeAmostra`) e a partir daí ele passa a ser salvo normalmente,
-  // porque virou um rascunho real.
   useEffect(() => {
     if (plano === planoDeAmostra) return
     try {
-      localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(plano))
+      localStorage.setItem(chaveRascunho, JSON.stringify(plano))
     } catch {
       /* navegador sem armazenamento: seguimos sem salvar */
     }
-  }, [plano])
+  }, [plano, chaveRascunho])
 
   const mudar = useCallback(
     (mudanca: Partial<PlanoDeAula>) => setPlano((atual) => ({ ...atual, ...mudanca })),
     [],
   )
 
-  /**
-   * Limpa a página. Fica em dois lugares — aqui no cabeçalho, sempre visível
-   * sem precisar rolar, e de novo no rodapé do formulário — porque quem se
-   * sente "preso" num rascunho antigo precisa achar a saída na hora. Pede
-   * confirmação porque agora é fácil clicar sem querer, bem ao lado do botão
-   * do exemplo.
-   */
   const limpar = useCallback(() => {
     if (confirm('Isso apaga tudo o que você preencheu nesta página. Continuar?')) {
       setPlano(planoVazio())
+      setPlanoAtualId(null)
     }
+  }, [])
+
+  const abrirPlanoSalvo = useCallback((salvo: PlanoSalvo) => {
+    // Igual ao rascunho do localStorage: um plano salvo antes de um campo
+    // novo existir (ex.: "observacao") não tem essa chave, e sem o merge
+    // com planoVazio() a tela quebra tentando ler undefined.
+    setPlano({ ...planoVazio(), ...salvo.dados })
+    setPlanoAtualId(salvo.id)
+    setMostrarMeusPlanos(false)
   }, [])
 
   return (
@@ -82,15 +81,70 @@ export function App() {
           <div className="subtitulo">Núcleo WIT · Micro Ka</div>
         </div>
         <div className="espaco" />
-        <button type="button" className="botao discreto" onClick={() => setPlano(planoDeAmostra)}>
+        <button
+          type="button"
+          className="botao discreto"
+          onClick={() => {
+            setPlano(planoDeAmostra)
+            setPlanoAtualId(null)
+          }}
+        >
           Ver um exemplo preenchido
+        </button>
+        <button type="button" className="botao discreto" onClick={() => setMostrarMeusPlanos(true)}>
+          Meus planos
         </button>
         <button type="button" className="botao discreto" onClick={limpar}>
           Limpar página
         </button>
+        <button
+          type="button"
+          className="botao discreto"
+          title={sessao.user.email}
+          onClick={() => supabase?.auth.signOut()}
+        >
+          Sair
+        </button>
       </header>
 
-      <Formulario plano={plano} aoMudar={mudar} aoLimpar={limpar} />
+      <Formulario
+        plano={plano}
+        aoMudar={mudar}
+        aoLimpar={limpar}
+        planoSalvoId={planoAtualId}
+        aoSalvar={async (dadosAtuais) => {
+          const salvo = await salvarPlano(planoAtualId, dadosAtuais)
+          setPlanoAtualId(salvo.id)
+        }}
+      />
+
+      {mostrarMeusPlanos ? (
+        <MeusPlanos aoFechar={() => setMostrarMeusPlanos(false)} aoAbrirPlano={abrirPlanoSalvo} />
+      ) : null}
     </>
   )
+}
+
+export function App() {
+  const [sessao, setSessao] = useState<Session | null>(null)
+  const [carregando, setCarregando] = useState(true)
+
+  useEffect(() => {
+    if (!supabase) {
+      setCarregando(false)
+      return
+    }
+    supabase.auth.getSession().then(({ data }) => {
+      setSessao(data.session)
+      setCarregando(false)
+    })
+    const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+      setSessao(novaSessao)
+    })
+    return () => assinatura.subscription.unsubscribe()
+  }, [])
+
+  if (carregando) return null
+  if (!sessao) return <Auth />
+  return <AppLogado sessao={sessao} />
 }

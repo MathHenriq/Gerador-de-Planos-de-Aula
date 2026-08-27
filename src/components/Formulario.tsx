@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { CICLOS, CURSOS, DURACOES_DISPONIVEIS, formatarDuracao } from '../constants'
 import { nomeDoArquivo } from '../nomeDoDocumento'
@@ -20,17 +20,29 @@ export function Formulario({
   plano,
   aoMudar,
   aoLimpar,
+  planoSalvoId,
+  aoSalvar,
 }: {
   plano: PlanoDeAula
   aoMudar: (mudanca: Partial<PlanoDeAula>) => void
   aoLimpar: () => void
+  /** `null` quando o plano em edição ainda não foi salvo na conta. */
+  planoSalvoId?: string | null
+  /** Ausente quando não há login (ver `App.tsx`) — some o botão "Salvar". */
+  aoSalvar?: (plano: PlanoDeAula) => Promise<void>
 }) {
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const [erroSalvar, setErroSalvar] = useState('')
+  const [salvoAgora, setSalvoAgora] = useState(false)
 
   const faltando = camposObrigatoriosFaltando(plano)
   const tempoOk = fechaNoTempoDaAula(plano.estrutura, plano.minutos)
   const { apertadas, estouradas } = diagnosticar(plano)
+
+  // Uma edição depois de salvar torna o "Plano salvo" desatualizado.
+  useEffect(() => setSalvoAgora(false), [plano])
 
   async function baixar() {
     setBaixando(true)
@@ -41,6 +53,21 @@ export function Formulario({
       setErro(e instanceof Error ? e.message : 'Não consegui gerar o PDF.')
     } finally {
       setBaixando(false)
+    }
+  }
+
+  async function salvar() {
+    if (!aoSalvar) return
+    setSalvando(true)
+    setErroSalvar('')
+    setSalvoAgora(false)
+    try {
+      await aoSalvar(plano)
+      setSalvoAgora(true)
+    } catch (e) {
+      setErroSalvar(e instanceof Error ? e.message : 'Não consegui salvar o plano.')
+    } finally {
+      setSalvando(false)
     }
   }
 
@@ -251,11 +278,18 @@ export function Formulario({
           ) : null}
 
           {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
+          {erroSalvar ? <Aviso tipo="erro">{erroSalvar}</Aviso> : null}
+          {salvoAgora ? <Aviso tipo="info">Plano salvo na sua conta.</Aviso> : null}
 
           <div className="acoes">
             <button type="button" className="botao" onClick={baixar} disabled={baixando}>
               {baixando ? 'Gerando…' : 'Baixar PDF'}
             </button>
+            {aoSalvar ? (
+              <button type="button" className="botao secundario" onClick={salvar} disabled={salvando}>
+                {salvando ? 'Salvando…' : planoSalvoId ? 'Atualizar plano salvo' : 'Salvar na minha conta'}
+              </button>
+            ) : null}
           </div>
 
           <p className="nome-arquivo" title={nomeDoArquivo(plano)}>
