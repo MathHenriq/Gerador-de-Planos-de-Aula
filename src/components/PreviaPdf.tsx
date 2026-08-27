@@ -99,5 +99,24 @@ export function PreviaPdf({ plano }: { plano: PlanoDeAula }) {
     )
   }
 
-  return <iframe title="Prévia do plano de aula" src={`${url}#toolbar=0&view=FitH`} />
+  // O plano sempre sai em 3 páginas fixas (ver PlanoDocument.tsx). Uma prévia
+  // só com a página 1 escondia as outras duas atrás de uma rolagem que nem
+  // todo visualizador de PDF embutido deixa óbvia. Em vez de um iframe só,
+  // cada página ganha o seu — `#page=N` manda o visualizador nativo abrir
+  // direto naquela página — empilhados na mesma coluna, todos visíveis sem
+  // precisar rolar *dentro* de nada.
+  return (
+    <>
+      {PAGINAS.map((n) => (
+        <div className="previa-pagina" key={n}>
+          <p className="previa-pagina-rotulo">
+            Página {n} de {PAGINAS.length}
+          </p>
+          <iframe title={`Prévia do plano de aula — página ${n}`} src={`${url}#page=${n}&toolbar=0&view=FitH`} />
+        </div>
+      ))}
+    </>
+  )
 }
+
+const PAGINAS = [1, 2, 3]

@@ -25,7 +25,10 @@ Outros comandos:
 
 ## Como o professor usa
 
-Uma tela só: preenche os campos à esquerda, confere a prévia do PDF à direita, baixa.
+Uma tela só: preenche os campos à esquerda, confere a prévia do PDF à direita, baixa. A
+prévia mostra as 3 páginas do plano empilhadas, cada uma em seu próprio visualizador
+(`#page=N` no fragmento da URL do blob) — dá pra ver o documento inteiro rolando a tela,
+sem precisar baixar primeiro.
 
 **No celular** o Chrome do Android não exibe PDF dentro da página — no lugar do documento
 ele desenha um cartão escuro com o identificador do blob. Quando

@@ -368,10 +368,24 @@ textarea {
   gap: 12px;
 }
 
+.previa-pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.previa-pagina-rotulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  margin: 0;
+}
+
 .previa iframe {
   width: 100%;
-  height: 70vh;
-  min-height: 520px;
+  /* Proporção A4 do design (794 × 1123): a altura acompanha a largura, então
+     a página inteira sempre aparece sem precisar rolar dentro do iframe. */
+  aspect-ratio: 794 / 1123;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   background: var(--branco);
@@ -648,11 +662,6 @@ textarea {
 
   .cartao {
     padding: 16px;
-  }
-
-  .previa iframe {
-    height: 60vh;
-    min-height: 340px;
   }
 
   .escolas {

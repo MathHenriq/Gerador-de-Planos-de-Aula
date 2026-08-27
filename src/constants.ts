@@ -77,12 +77,9 @@ export const DURACOES_DISPONIVEIS = [90, 100] as const
 /** Duração de um plano novo — a primeira opção da lista. */
 export const MINUTOS_PADRAO: number = DURACOES_DISPONIVEIS[0]
 
-/** 90 → "1h:30 min", no formato do template. */
+/** 90 → "90 min" — o PDF de referência do Núcleo WIT usa minutos corridos, não "1h:30". */
 export function formatarDuracao(minutos: number): string {
-  const horas = Math.floor(minutos / 60)
-  const resto = minutos % 60
-  if (!horas) return `${resto} min`
-  return `${horas}h:${String(resto).padStart(2, '0')} min`
+  return `${minutos} min`
 }
 
 export const MATERIAIS_PADRAO = ['Computador', 'Mouse e teclado', 'Acesso à internet']
