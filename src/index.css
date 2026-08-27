@@ -738,6 +738,13 @@ textarea {
   margin-top: 4px;
 }
 
+.auth-esqueci {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 14px;
+}
+
 /* ── modal "meus planos" ──────────────────────────────────────────────────── */
 
 .modal-fundo {

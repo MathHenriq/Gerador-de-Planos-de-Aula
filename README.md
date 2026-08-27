@@ -97,10 +97,18 @@ O gerador usa [Supabase](https://supabase.com) só para login e para guardar os 
 salvos — a geração do PDF continua 100% no navegador, sem servidor nenhum no meio.
 
 - **Login**: e-mail e senha (`supabase.auth`). Não tem link mágico nem Google — decisão
-  do instrutor, mais previsível pro professor. Por padrão o Supabase pede confirmação por
-  e-mail antes do primeiro login; se isso travar o cadastro (e-mail não chega, ou demora),
-  dá pra desligar em Authentication → Providers → Email → "Confirm email", no painel do
-  projeto.
+  do instrutor, mais previsível pro professor. A confirmação de e-mail no primeiro
+  cadastro está **desligada** (Authentication → Providers → Email → "Confirm email", no
+  painel do projeto) — quem se cadastra já entra na hora, sem precisar clicar em link
+  nenhum.
+- **Esqueci minha senha**: link na tela de login (`src/components/Auth.tsx`) chama
+  `resetPasswordForEmail`, que manda um e-mail com um link de recuperação. Ao abrir esse
+  link, o Supabase já loga a pessoa numa sessão temporária e dispara o evento
+  `PASSWORD_RECOVERY`; `App.tsx` escuta esse evento e troca a tela normal pela de "Nova
+  senha" (`src/components/RedefinirSenha.tsx`) até a pessoa escolher a senha nova — depois
+  disso cai direto no formulário, já logada. Pra esse link funcionar em produção (e não só
+  em `localhost`), o domínio do site precisa estar na lista de **Redirect URLs**, em
+  Authentication → URL Configuration, no painel do projeto.
 - **Planos salvos**: tabela `planos` (`professor_id`, `dados` — o `PlanoDeAula` inteiro
   como JSON —, `criado_em`, `atualizado_em`), com RLS restringindo cada professor às
   próprias linhas. O botão **"Salvar na minha conta"**, ao lado de "Baixar PDF", grava o
@@ -113,9 +121,11 @@ salvos — a geração do PDF continua 100% no navegador, sem servidor nenhum no
   variáveis configuradas, `src/supabase/client.ts` fica `null` e a tela de login mostra um
   aviso em vez de travar.
 - **Onde mexer**: `src/supabase/client.ts` (o cliente), `src/supabase/planos.ts` (as
-  funções de salvar/listar/excluir), `src/components/Auth.tsx` (a tela de login/cadastro),
-  `src/components/MeusPlanos.tsx` (a lista). O esquema do banco (tabela + RLS + trigger de
-  `atualizado_em`) está aplicado direto no projeto Supabase, não em arquivo neste repo.
+  funções de salvar/listar/excluir), `src/components/Auth.tsx` (login/cadastro/"esqueci
+  minha senha"), `src/components/RedefinirSenha.tsx` (escolher a senha nova),
+  `src/components/MeusPlanos.tsx` (a lista de planos salvos). O esquema do banco (tabela +
+  RLS + trigger de `atualizado_em`) está aplicado direto no projeto Supabase, não em
+  arquivo neste repo.
 
 ## Estrutura
 

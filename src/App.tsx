@@ -5,6 +5,7 @@ import logoMicroKa from './assets/logo-micro-ka.png'
 import { Auth } from './components/Auth'
 import { Formulario } from './components/Formulario'
 import { MeusPlanos } from './components/MeusPlanos'
+import { RedefinirSenha } from './components/RedefinirSenha'
 import { planoVazio } from './constants'
 import { planoDeAmostra } from './planoDeAmostra'
 import { supabase } from './supabase/client'
@@ -128,6 +129,11 @@ function AppLogado({ sessao }: { sessao: Session }) {
 export function App() {
   const [sessao, setSessao] = useState<Session | null>(null)
   const [carregando, setCarregando] = useState(true)
+  // O link de "esqueci minha senha" volta pro app numa sessão temporária de
+  // recuperação — o Supabase avisa disso com o evento PASSWORD_RECOVERY, e
+  // enquanto ele não terminar (escolher a senha nova) a tela normal fica
+  // escondida, senão a pessoa cairia direto no formulário sem trocar nada.
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false)
 
   useEffect(() => {
     if (!supabase) {
@@ -138,13 +144,15 @@ export function App() {
       setSessao(data.session)
       setCarregando(false)
     })
-    const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+    const { data: assinatura } = supabase.auth.onAuthStateChange((evento, novaSessao) => {
       setSessao(novaSessao)
+      if (evento === 'PASSWORD_RECOVERY') setRecuperandoSenha(true)
     })
     return () => assinatura.subscription.unsubscribe()
   }, [])
 
   if (carregando) return null
+  if (recuperandoSenha) return <RedefinirSenha aoConcluir={() => setRecuperandoSenha(false)} />
   if (!sessao) return <Auth />
   return <AppLogado sessao={sessao} />
 }
