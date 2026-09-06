@@ -31,6 +31,7 @@ export function Formulario({
   minhasEquipes = [],
   equipeCompartilhada = null,
   aoMudarEquipeCompartilhada,
+  contaCarregada = false,
 }: {
   plano: PlanoDeAula
   aoMudar: (mudanca: Partial<PlanoDeAula>) => void
@@ -44,6 +45,8 @@ export function Formulario({
   /** Equipe com quem este plano fica compartilhado; `null` = somente ele. */
   equipeCompartilhada?: string | null
   aoMudarEquipeCompartilhada?: (equipeId: string | null) => void
+  /** O perfil e as equipes do professor já vieram do banco? */
+  contaCarregada?: boolean
 }) {
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState('')
@@ -303,6 +306,14 @@ export function Formulario({
               {equipeCompartilhada
                 ? ` e compartilhado com a equipe ${nomeDaEquipe(equipeCompartilhada)}.`
                 : ' — somente você vê.'}
+            </Aviso>
+          ) : null}
+
+          {aoSalvar && contaCarregada && !minhasEquipes.length ? (
+            <Aviso tipo="info">
+              Você ainda não está em nenhuma equipe, então este plano fica só na sua conta. Peça à
+              Gestão para incluir você na equipe do seu curso — aí aparece aqui a opção de
+              compartilhar.
             </Aviso>
           ) : null}
 

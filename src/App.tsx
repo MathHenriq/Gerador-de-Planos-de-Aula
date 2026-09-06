@@ -9,6 +9,7 @@ import { ImportarPlano } from './components/ImportarPlano'
 import { MeusPlanos } from './components/MeusPlanos'
 import { PlanosDaEquipe } from './components/PlanosDaEquipe'
 import { RedefinirSenha } from './components/RedefinirSenha'
+import { Aviso } from './components/ui'
 import { EQUIPE_GESTAO, planoVazio } from './constants'
 import { planoDeAmostra } from './planoDeAmostra'
 import { supabase } from './supabase/client'
@@ -51,19 +52,39 @@ function AppLogado({ sessao }: { sessao: Session }) {
   const [mostrarGestao, setMostrarGestao] = useState(false)
   const [mostrarImportar, setMostrarImportar] = useState(false)
   const [conta, setConta] = useState<MinhaConta | null>(null)
+  const [carregandoConta, setCarregandoConta] = useState(true)
+  const [erroConta, setErroConta] = useState('')
+  const [tentativa, setTentativa] = useState(0)
 
-  // Perfil e equipes vêm do banco uma vez por sessão. Se falhar (rede, ou
-  // migração ainda não aplicada), o app segue funcionando como antes: sem os
-  // botões de equipe, mas com o gerador e os planos da própria conta.
+  // Perfil e equipes vêm do banco uma vez por sessão.
+  //
+  // Quando isso falha, o app CONTINUA funcionando (gerador e planos da própria
+  // conta), mas a falha aparece na tela: a primeira versão engolia o erro em
+  // silêncio, e o sintoma era só o sumiço dos botões de equipe — impossível de
+  // diagnosticar para quem está usando, e difícil até para quem escreveu.
   useEffect(() => {
     let ativo = true
+    setCarregandoConta(true)
     carregarMinhaConta()
-      .then((c) => ativo && setConta(c))
-      .catch(() => ativo && setConta(null))
+      .then((c) => {
+        if (!ativo) return
+        setConta(c)
+        setErroConta('')
+      })
+      .catch((e: unknown) => {
+        if (!ativo) return
+        const mensagem = e instanceof Error ? e.message : 'erro desconhecido'
+        console.error('Falha ao carregar perfil e equipes:', e)
+        setConta(null)
+        setErroConta(mensagem)
+      })
+      .finally(() => {
+        if (ativo) setCarregandoConta(false)
+      })
     return () => {
       ativo = false
     }
-  }, [sessao.user.id])
+  }, [sessao.user.id, tentativa])
 
   // Compartilhar é sempre com uma equipe de curso: a Gestão enxerga tudo de
   // qualquer jeito, então não faz sentido oferecê-la como destino.
@@ -130,15 +151,23 @@ function AppLogado({ sessao }: { sessao: Session }) {
         <button type="button" className="botao discreto" onClick={() => setMostrarImportar(true)}>
           Importar PDF
         </button>
-        {conta ? (
-          <button
-            type="button"
-            className="botao discreto"
-            onClick={() => setMostrarPlanosDaEquipe(true)}
-          >
-            Planos da equipe
-          </button>
-        ) : null}
+        {/* Sempre presente: se as equipes não carregaram, o botão fica
+            desabilitado dizendo por quê, em vez de simplesmente sumir. */}
+        <button
+          type="button"
+          className="botao discreto"
+          disabled={!conta}
+          title={
+            conta
+              ? undefined
+              : carregandoConta
+                ? 'Carregando suas equipes…'
+                : `Não consegui carregar suas equipes: ${erroConta}`
+          }
+          onClick={() => setMostrarPlanosDaEquipe(true)}
+        >
+          {carregandoConta ? 'Planos da equipe…' : 'Planos da equipe'}
+        </button>
         {conta?.gestao ? (
           <button type="button" className="botao discreto" onClick={() => setMostrarGestao(true)}>
             Gestão
@@ -157,11 +186,30 @@ function AppLogado({ sessao }: { sessao: Session }) {
         </button>
       </header>
 
+      {erroConta ? (
+        <div className="faixa-erro">
+          <Aviso tipo="erro">
+            <strong>Não consegui carregar seu perfil e suas equipes.</strong> O gerador continua
+            funcionando, mas sem compartilhar com a equipe nem ver os planos dos colegas. Detalhe do
+            erro: <code>{erroConta}</code>{' '}
+            <button
+              type="button"
+              className="botao secundario"
+              onClick={() => setTentativa((n) => n + 1)}
+              disabled={carregandoConta}
+            >
+              {carregandoConta ? 'Tentando…' : 'Tentar de novo'}
+            </button>
+          </Aviso>
+        </div>
+      ) : null}
+
       <Formulario
         plano={plano}
         aoMudar={mudar}
         aoLimpar={limpar}
         planoSalvoId={planoAtualId}
+        contaCarregada={!!conta}
         minhasEquipes={equipesDeCurso}
         equipeCompartilhada={equipeCompartilhada}
         aoMudarEquipeCompartilhada={setEquipeCompartilhada}

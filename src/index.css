@@ -1089,3 +1089,21 @@ textarea {
 .previa-pastas li {
   margin-bottom: 2px;
 }
+
+.faixa-erro {
+  max-width: 1180px;
+  margin: 16px auto 0;
+  padding: 0 20px;
+}
+
+.faixa-erro code {
+  font-size: 12px;
+  background: rgb(0 0 0 / 6%);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.faixa-erro .botao {
+  margin-left: 8px;
+  vertical-align: middle;
+}
