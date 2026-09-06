@@ -187,6 +187,7 @@ export function Formulario({
               aoMudar={(materiais) => aoMudar({ materiais })}
               placeholder="Ex.: Computador"
               rotuloAdicionar="Adicionar material"
+              descricaoDoItem="material"
               linhas={1}
             />
           </Secao>
@@ -200,6 +201,7 @@ export function Formulario({
               aoMudar={(objetivos) => aoMudar({ objetivos })}
               placeholder="Ex.: Compreender os conceitos básicos de front-end…"
               rotuloAdicionar="Adicionar objetivo"
+              descricaoDoItem="objetivo"
             />
           </Secao>
 
@@ -219,6 +221,7 @@ export function Formulario({
               aoMudar={(metodologia) => aoMudar({ metodologia })}
               placeholder="Como a aula é conduzida"
               rotuloAdicionar="Adicionar passo"
+              descricaoDoItem="passo"
             />
           </Secao>
 
@@ -243,6 +246,7 @@ export function Formulario({
               aoMudar={(recursos) => aoMudar({ recursos })}
               placeholder="Ex.: VSCode"
               rotuloAdicionar="Adicionar recurso"
+              descricaoDoItem="recurso"
               linhas={1}
             />
           </Secao>

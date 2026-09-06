@@ -21,6 +21,7 @@ Outros comandos:
 |---|---|
 | `npm run build` | Checagem de tipos + build de produção em `dist/` |
 | `npm run amostra` | Gera `amostras/plano.pdf` fora do navegador, para conferir o layout |
+| `npm run importacao` | Gera o PDF de amostra e lê de volta, conferindo campo a campo |
 | `npm run metricas` | Regera `src/pdf/metricas.ts` a partir dos arquivos da fonte |
 
 ## Como o professor usa
@@ -37,6 +38,14 @@ ele desenha um cartão escuro com o identificador do blob. Quando
 
 A tela avisa quando falta campo obrigatório, quando os blocos da atividade não fecham os
 90 minutos e quando algum texto passou do tamanho da caixa do template.
+
+Toda lista do formulário — objetivos, materiais, metodologia, recursos, habilidades da
+BNCC, blocos da estrutura e os passos dentro de cada bloco — tem **setas ↑ ↓ para
+reordenar**, além do × de remover, como já havia na seleção de escolas. Quem acrescentou um
+item no fim, ou errou a ordem, move em vez de reescrever tudo. As habilidades da BNCC
+continuam **editáveis depois de adicionadas** (código e descrição), em vez de virarem
+texto fixo. As caixas de texto crescem conforme o conteúdo, para item longo não ficar com
+o fim escondido.
 
 O rascunho do que está sendo editado fica salvo no navegador (`localStorage`, isolado por
 professor — ver [Login e planos salvos](#login-e-planos-salvos)), então recarregar a página
@@ -160,6 +169,63 @@ segundo copiava o plano do primeiro **campo por campo**, a partir do PDF.
   ler plano privado de outro, compartilhar com equipe de que não faz parte, editar plano
   alheio, se promover à Gestão ou remexer nas equipes dos outros.
 
+### Exportação em lote (Gestão)
+
+Na aba **Exportar** do painel da Gestão: escolhe a semana (a lista sai do campo *Semana*
+dos planos salvos), escolhe como as pastas ficam organizadas e baixa um ZIP com o PDF de
+cada plano — gerados aqui no navegador, com o mesmo motor do botão "Baixar PDF", então o
+arquivo é idêntico ao que o professor baixaria.
+
+Três organizações possíveis (`src/exportar/pacote.ts`):
+
+| Opção | Estrutura |
+|---|---|
+| Só por curso | `Oficina de Games/plano.pdf` |
+| Por curso e, dentro dele, por professor | `Oficina de Games/Nicolas Correa/plano.pdf` |
+| Só por professor | `Nicolas Correa/plano.pdf` |
+
+Detalhes que valem saber:
+
+- As **seis pastas de curso aparecem sempre** (nas duas primeiras opções); a que não teve
+  plano na semana leva um `(sem planos).txt` dentro, para a Gestão ver de relance quem não
+  entregou.
+- Um plano **não compartilhado** entra pelo campo *Curso* dele, já que não tem equipe. Um
+  checkbox deixa excluir esses planos da exportação.
+- Dois planos do mesmo professor na mesma semana têm o mesmo nome padrão de arquivo; o
+  segundo ganha o tema no fim do nome, para nenhum sobrescrever o outro dentro do ZIP.
+
+## Importar um plano de PDF
+
+O botão **"Importar PDF"**, no cabeçalho, lê um plano de aula a partir do PDF e joga os
+campos no formulário — resolvendo o retrabalho de recopiar plano vindo de outro sistema.
+
+A leitura é **posicional, não por palavra-chave**: o template tem as caixas sempre nas
+mesmas coordenadas (`src/pdf/layout.ts`), então o que decide de qual campo é cada trecho
+é o lugar dele na página. Duas coisas que o texto sozinho não resolve:
+
+- **Onde um item de lista termina.** O marcador é um círculo desenhado, não texto, e todas
+  as linhas de um item (inclusive as de continuação) começam no mesmo x. O leitor acha as
+  bolinhas na lista de operações de desenho do PDF e usa a posição delas. Se não achar
+  nenhuma (PDF de outra origem), cai num plano B: se a primeira palavra da linha seguinte
+  ainda caberia no que sobrou da linha atual, então aquilo é item novo, não continuação.
+- **Título x item, na Estrutura da atividade.** Os dois saem em caixa alta; o que separa é
+  o recuo (11,1 px do título contra 36 dos itens).
+
+**Limitação conhecida e sem solução possível:** o template imprime quase tudo em caixa
+alta, então o texto importado volta em MAIÚSCULAS — o PDF não guarda em lugar nenhum como
+o professor tinha digitado. O conteúdo está correto; só a caixa das letras muda. A tela
+avisa isso antes de usar o plano, e o que é importado **não é salvo sozinho**: cai no
+formulário como plano novo, para conferir e salvar.
+
+Para conferir o leitor depois de mexer no layout ou no documento:
+
+```bash
+npm run importacao
+```
+
+Gera o PDF do plano de amostra, lê de volta e compara campo a campo com o original
+(ignorando maiúsculas/minúsculas, pelo motivo acima). Sai com erro se algum campo divergir.
+
 ### Aplicar no Supabase
 
 O SQL está em [`supabase/migrations/20260906_equipes.sql`](supabase/migrations/20260906_equipes.sql):
@@ -194,6 +260,11 @@ src/
     fontes.ts       registro das fontes (o app e o script passam caminhos diferentes)
   bncc/
     validar.ts      única regra automática: o código da habilidade tem que começar com "EF"
+  importar/
+    linhas.ts       texto e marcadores do PDF, em px do design
+    plano.ts        de que campo é cada trecho, pela caixa em que ele caiu
+  exportar/
+    pacote.ts       o ZIP da Gestão: pastas por curso e/ou professor
   supabase/
     client.ts       cliente do Supabase (login + banco)
     planos.ts       salvar/listar/excluir/compartilhar/copiar planos

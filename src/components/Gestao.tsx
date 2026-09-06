@@ -8,9 +8,10 @@ import {
   type ProfessorDaGestao,
 } from '../supabase/equipes'
 import { listarTodosOsPlanos, type PlanoDaEquipe } from '../supabase/planos'
+import { ExportarPlanos } from './ExportarPlanos'
 import { Aviso } from './ui'
 
-type Aba = 'professores' | 'planos'
+type Aba = 'professores' | 'planos' | 'exportar'
 
 function dataFormatada(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -44,7 +45,7 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
   }, [])
 
   useEffect(() => {
-    if (aba !== 'planos' || planos) return
+    if ((aba !== 'planos' && aba !== 'exportar') || planos) return
     listarTodosOsPlanos()
       .then(setPlanos)
       .catch((e) => setErro(e instanceof Error ? e.message : 'Não consegui carregar os planos.'))
@@ -111,6 +112,13 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
           >
             Todos os planos
           </button>
+          <button
+            type="button"
+            className={aba === 'exportar' ? 'ativa' : ''}
+            onClick={() => setAba('exportar')}
+          >
+            Exportar
+          </button>
         </div>
 
         {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
@@ -169,6 +177,8 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
           )
         ) : !planos ? (
           <p className="explica">Carregando…</p>
+        ) : aba === 'exportar' ? (
+          <ExportarPlanos planos={planos} />
         ) : (
           <>
             <p className="explica">

@@ -6,7 +6,8 @@ import { PlanoDocument } from '../pdf/PlanoDocument'
 import { ASSETS } from '../pdf/recursos.web'
 import type { PlanoDeAula } from '../types'
 
-async function gerarBlob(plano: PlanoDeAula): Promise<Blob> {
+/** O PDF do plano, do jeito que ele sai no download — usado também na exportação em lote. */
+export async function gerarBlob(plano: PlanoDeAula): Promise<Blob> {
   return pdf(<PlanoDocument plano={plano} assets={ASSETS} />).toBlob()
 }
 

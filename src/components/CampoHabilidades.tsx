@@ -1,8 +1,9 @@
 import { useState } from 'react'
 
 import { codigoValido, normalizarCodigo } from '../bncc/validar'
+import { moverItem } from '../plano'
 import type { Habilidade } from '../types'
-import { Aviso } from './ui'
+import { Aviso, BotoesDeOrdem, TextoMultilinha } from './ui'
 
 /**
  * Habilidades da BNCC — campo livre.
@@ -11,6 +12,10 @@ import { Aviso } from './ui'
  * nem descrição sugerida. A única regra automática é que o código comece com
  * "EF" (Ensino Fundamental) — o resto da conferência contra a BNCC é
  * responsabilidade de quem preenche.
+ *
+ * Depois de adicionada, a habilidade continua editável e reordenável, como
+ * qualquer outra lista do formulário: antes ela virava um texto fixo que só
+ * dava para apagar e digitar de novo.
  */
 export function CampoHabilidades({
   habilidades,
@@ -43,21 +48,53 @@ export function CampoHabilidades({
     setErro('')
   }
 
+  const trocar = (i: number, mudanca: Partial<Habilidade>) =>
+    aoMudar(habilidades.map((h, j) => (i === j ? { ...h, ...mudanca } : h)))
+
+  // Aviso, não bloqueio: quem está no meio de uma edição pode estar com o
+  // código pela metade, e travar a digitação seria pior que sinalizar.
+  const invalidas = habilidades
+    .map((h, i) => ({ h, i }))
+    .filter(({ h }) => h.codigo.trim() && !codigoValido(h.codigo))
+
   return (
     <div>
-      {habilidades.map((h) => (
-        <div className="bncc-escolhida" key={h.codigo}>
-          <span className="codigo">{h.codigo}</span>
-          <span className="descricao">{h.descricao}</span>
-          <button
-            type="button"
-            className="botao icone"
-            onClick={() => aoMudar(habilidades.filter((x) => x.codigo !== h.codigo))}
-            aria-label={`Remover ${h.codigo}`}
-            title="Remover"
-          >
-            ×
-          </button>
+      {habilidades.map((h, i) => (
+        <div className="bncc-escolhida" key={i}>
+          <input
+            type="text"
+            className="codigo-editavel"
+            value={h.codigo}
+            placeholder="EF69CO02"
+            aria-label={`Código da habilidade ${i + 1}`}
+            onChange={(e) => trocar(i, { codigo: e.target.value.toUpperCase() })}
+            onBlur={(e) => trocar(i, { codigo: normalizarCodigo(e.target.value) })}
+          />
+          <div className="descricao-editavel">
+            <TextoMultilinha
+              valor={h.descricao}
+              aoMudar={(descricao) => trocar(i, { descricao })}
+              placeholder="Texto da habilidade"
+              rotulo={`Descrição da habilidade ${i + 1}`}
+            />
+          </div>
+          <div className="item-lista-acoes">
+            <BotoesDeOrdem
+              indice={i}
+              total={habilidades.length}
+              descricao={`habilidade ${i + 1}`}
+              aoMover={(de, para) => aoMudar(moverItem(habilidades, de, para))}
+            />
+            <button
+              type="button"
+              className="botao icone"
+              onClick={() => aoMudar(habilidades.filter((_, j) => j !== i))}
+              aria-label={`Remover habilidade ${i + 1}`}
+              title="Remover"
+            >
+              ×
+            </button>
+          </div>
         </div>
       ))}
 
@@ -89,7 +126,7 @@ export function CampoHabilidades({
         </label>
       </div>
 
-      <div className="acoes" style={{ marginBottom: erro ? 10 : 0 }}>
+      <div className="acoes" style={{ marginBottom: erro || invalidas.length ? 10 : 0 }}>
         <button
           type="button"
           className="botao secundario"
@@ -101,6 +138,15 @@ export function CampoHabilidades({
       </div>
 
       {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
+
+      {invalidas.length ? (
+        <Aviso tipo="atencao">
+          {invalidas.length === 1
+            ? `O código "${invalidas[0].h.codigo}" não começa com "EF".`
+            : `${invalidas.length} códigos não começam com "EF".`}{' '}
+          O plano é gerado do mesmo jeito, mas confira antes de baixar.
+        </Aviso>
+      ) : null}
     </div>
   )
 }

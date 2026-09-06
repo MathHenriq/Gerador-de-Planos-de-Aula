@@ -1,6 +1,7 @@
-import { somaDosBlocos } from '../plano'
+import { moverItem, somaDosBlocos } from '../plano'
 import type { BlocoAtividade } from '../types'
 import { ListaEditavel } from './ListaEditavel'
+import { BotoesDeOrdem } from './ui'
 
 /**
  * Editor dos blocos de tempo da aula. O total precisa fechar exatamente na
@@ -55,6 +56,12 @@ export function EditorEstrutura({
                 trocar(i, { minutos: Math.max(0, parseInt(e.target.value, 10) || 0) })
               }
             />
+            <BotoesDeOrdem
+              indice={i}
+              total={blocos.length}
+              descricao={`bloco ${i + 1}`}
+              aoMover={(de, para) => aoMudar(moverItem(blocos, de, para))}
+            />
             <button
               type="button"
               className="botao icone"
@@ -71,6 +78,7 @@ export function EditorEstrutura({
             aoMudar={(itens) => trocar(i, { itens })}
             placeholder="O que acontece nesse bloco"
             rotuloAdicionar="Adicionar passo"
+            descricaoDoItem="passo"
           />
         </div>
       ))}

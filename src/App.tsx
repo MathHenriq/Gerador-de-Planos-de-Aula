@@ -5,6 +5,7 @@ import logoMicroKa from './assets/logo-micro-ka.png'
 import { Auth } from './components/Auth'
 import { Formulario } from './components/Formulario'
 import { Gestao } from './components/Gestao'
+import { ImportarPlano } from './components/ImportarPlano'
 import { MeusPlanos } from './components/MeusPlanos'
 import { PlanosDaEquipe } from './components/PlanosDaEquipe'
 import { RedefinirSenha } from './components/RedefinirSenha'
@@ -48,6 +49,7 @@ function AppLogado({ sessao }: { sessao: Session }) {
   const [mostrarMeusPlanos, setMostrarMeusPlanos] = useState(false)
   const [mostrarPlanosDaEquipe, setMostrarPlanosDaEquipe] = useState(false)
   const [mostrarGestao, setMostrarGestao] = useState(false)
+  const [mostrarImportar, setMostrarImportar] = useState(false)
   const [conta, setConta] = useState<MinhaConta | null>(null)
 
   // Perfil e equipes vêm do banco uma vez por sessão. Se falhar (rede, ou
@@ -125,6 +127,9 @@ function AppLogado({ sessao }: { sessao: Session }) {
         <button type="button" className="botao discreto" onClick={() => setMostrarMeusPlanos(true)}>
           Meus planos
         </button>
+        <button type="button" className="botao discreto" onClick={() => setMostrarImportar(true)}>
+          Importar PDF
+        </button>
         {conta ? (
           <button
             type="button"
@@ -184,6 +189,21 @@ function AppLogado({ sessao }: { sessao: Session }) {
       ) : null}
 
       {mostrarGestao && conta?.gestao ? <Gestao aoFechar={() => setMostrarGestao(false)} /> : null}
+
+      {mostrarImportar ? (
+        <ImportarPlano
+          aoFechar={() => setMostrarImportar(false)}
+          aoUsar={(importado) => {
+            // Entra como plano NOVO, não como edição do que estava aberto: o
+            // conteúdo veio de outro documento, e sobrescrever um plano salvo
+            // sem querer seria pior do que criar um a mais.
+            setPlano(importado)
+            setPlanoAtualId(null)
+            setEquipeCompartilhada(null)
+            setMostrarImportar(false)
+          }}
+        />
+      ) : null}
     </>
   )
 }
