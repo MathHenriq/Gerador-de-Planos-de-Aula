@@ -121,6 +121,15 @@ salvos — a geração do PDF continua 100% no navegador, sem servidor nenhum no
   Vale saber: com o Google ligado, qualquer pessoa com conta Google consegue criar acesso —
   como já acontece com o cadastro por e-mail, que também é aberto. Quem não está em equipe
   não enxerga plano de ninguém (RLS), então o pior caso é uma conta vazia.
+- **Quem já tinha conta não vira conta nova.** O Supabase
+  [liga a identidade nova ao usuário existente](https://supabase.com/docs/guides/auth/auth-identity-linking)
+  quando o e-mail bate **e está confirmado** — e as 25 contas atuais estão todas confirmadas.
+  Na prática: o professor que entra pelo Google com o mesmo e-mail continua no mesmo
+  usuário, com os mesmos planos, perfil e equipes, e passa a poder entrar dos dois jeitos
+  (a senha antiga continua valendo). Quem entrar pelo Google com **outro** e-mail cria uma
+  conta separada, sem os planos antigos — por isso a tela de login pede para usar o e-mail
+  de sempre, e a tela de "Falta só isto" avisa de novo quem cair lá sem equipe.
+  Quem só usou o Google e quiser uma senha define uma pelo "Esqueci minha senha".
 - **Esqueci minha senha**: link na tela de login (`src/components/Auth.tsx`) chama
   `resetPasswordForEmail`, que manda um e-mail com um link de recuperação. Ao abrir esse
   link, o Supabase já loga a pessoa numa sessão temporária e dispara o evento

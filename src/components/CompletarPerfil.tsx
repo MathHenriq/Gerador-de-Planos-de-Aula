@@ -63,6 +63,16 @@ export function CompletarPerfil({
           os seus.
         </p>
 
+        {/* Quem já usava o gerador e entrou pelo Google com OUTRO e-mail cai
+            exatamente aqui: conta nova, sem equipe e sem os planos antigos.
+            Avisar neste ponto é o que transforma uma conta duplicada
+            silenciosa em algo que a pessoa percebe na hora. */}
+        <Aviso tipo="atencao">
+          Se você já usava o gerador com outro e-mail, <strong>esta é uma conta nova e separada</strong> —
+          seus planos salvos continuam na conta antiga. Saia e entre com o e-mail de sempre (pelo
+          Google ou por senha, tanto faz: com o mesmo e-mail é a mesma conta).
+        </Aviso>
+
         <Campo rotulo="Nome e sobrenome" dica="é o que sai no campo Prof. do plano">
           <input
             type="text"

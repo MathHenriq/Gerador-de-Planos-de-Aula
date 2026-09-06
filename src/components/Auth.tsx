@@ -7,8 +7,15 @@ import { Aviso, Campo } from './ui'
 type Modo = 'entrar' | 'cadastrar' | 'recuperar'
 
 /**
- * Tela de entrada (login/cadastro/recuperação). E-mail e senha, sem link
- * mágico e sem Google — decisão do instrutor, mais previsível pro professor.
+ * Tela de entrada (login/cadastro/recuperação): e-mail e senha, ou Google.
+ * Sem link mágico — decisão do instrutor, mais previsível pro professor.
+ *
+ * Entrar pelo Google com um e-mail que já tem conta aqui NÃO cria conta
+ * nova: o Supabase liga a identidade nova ao usuário existente quando o
+ * e-mail bate e está confirmado, então planos, perfil e equipes seguem os
+ * mesmos, e os dois jeitos de entrar passam a valer. Com e-mail diferente,
+ * é conta separada — é o que a tela avisa, e o que `CompletarPerfil`
+ * reforça para quem cai lá sem equipe nenhuma.
  *
  * Se o Supabase não tiver as chaves configuradas (`supabase === null`), o
  * app mostra um aviso em vez de travar aqui — assim continua dando pra abrir
@@ -243,8 +250,11 @@ export function Auth() {
               </svg>
               Entrar com o Google
             </button>
-            <p className="explica" style={{ textAlign: 'center', marginTop: 8 }}>
-              Na primeira vez o app pergunta de qual equipe você faz parte.
+            <p className="explica" style={{ marginTop: 8 }}>
+              <strong>Use o mesmo e-mail de sempre.</strong> Se você já tem conta aqui, entrar pelo
+              Google com esse e-mail não cria conta nova: é a mesma conta, com os mesmos planos
+              salvos — e a senha continua valendo, se quiser entrar pelos campos acima. Com um
+              e-mail diferente, o sistema cria uma conta separada e seus planos ficam na antiga.
             </p>
           </>
         ) : null}
@@ -261,6 +271,14 @@ export function Auth() {
           >
             Esqueci minha senha
           </button>
+        ) : null}
+
+        {modo === 'recuperar' ? (
+          <p className="explica">
+            Serve também para <strong>criar</strong> uma senha: quem só entrou pelo Google até
+            agora não tem senha definida, e o link do e-mail deixa escolher uma — depois disso,
+            os dois jeitos de entrar funcionam na mesma conta.
+          </p>
         ) : null}
 
         {modo === 'recuperar' ? (
