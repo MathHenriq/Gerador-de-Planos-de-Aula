@@ -813,3 +813,169 @@ textarea {
   gap: 6px;
   flex: none;
 }
+
+/* ------------------------------------------------------------- equipes --- */
+
+.modal-cartao.largo {
+  max-width: 760px;
+}
+
+.equipes-escolha {
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 12px 14px 14px;
+  margin: 0 0 14px;
+}
+
+.equipes-escolha legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.equipes-escolha .explica {
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 6px 0 0;
+}
+
+.equipes-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.equipe-opcao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: pointer;
+  background: var(--branco);
+}
+
+.equipe-opcao:hover {
+  border-color: var(--tinta-suave);
+}
+
+.equipe-opcao.marcada {
+  border-color: var(--verde);
+  background: var(--verde-fundo);
+}
+
+.equipe-opcao input {
+  margin: 0;
+}
+
+.filtro-equipes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: var(--branco);
+  cursor: pointer;
+}
+
+.chip.ativo {
+  border-color: var(--verde);
+  background: var(--verde-fundo);
+  font-weight: 600;
+}
+
+.plano-detalhe .resumo-plano {
+  margin: 14px 0 0;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.resumo-plano {
+  margin: 10px 0 0;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.resumo-plano dt {
+  color: var(--tinta-suave);
+}
+
+.resumo-plano dd {
+  margin: 0;
+}
+
+.resumo-plano ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.cartao-copia {
+  margin-top: 18px;
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 14px 16px 16px;
+  background: var(--fundo);
+}
+
+.cartao-copia h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.compartilhamento {
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.compartilhamento .campo {
+  margin: 0;
+}
+
+.compartilhamento .explica {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.lista-professores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista-professores li {
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+
+.professor-identificacao strong {
+  display: block;
+  font-size: 14px;
+}
+
+.lista-planos li.empilhado {
+  flex-wrap: wrap;
+}
+
+.lista-planos li.empilhado .resumo-plano {
+  flex-basis: 100%;
+}

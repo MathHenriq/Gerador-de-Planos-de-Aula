@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { EQUIPES_DE_CURSO } from '../constants'
 import { supabase } from '../supabase/client'
 import { Aviso, Campo } from './ui'
 
@@ -17,9 +18,15 @@ export function Auth() {
   const [modo, setModo] = useState<Modo>('entrar')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [nome, setNome] = useState('')
+  const [equipes, setEquipes] = useState<string[]>([])
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
+
+  function alternarEquipe(id: string) {
+    setEquipes((atual) => (atual.includes(id) ? atual.filter((e) => e !== id) : [...atual, id]))
+  }
 
   if (!supabase) {
     return (
@@ -41,7 +48,16 @@ export function Auth() {
         const { error } = await supabase!.auth.signInWithPassword({ email, password: senha })
         if (error) throw error
       } else if (modo === 'cadastrar') {
-        const { data, error } = await supabase!.auth.signUp({ email, password: senha })
+        if (equipes.length === 0) throw new Error('Escolha pelo menos uma equipe para continuar.')
+        // Nome e equipes viajam como metadado do usuário: a trigger
+        // `ao_criar_usuario`, no banco, cria o perfil e as linhas de
+        // `membros_equipe` a partir daí — assim ninguém entra sem equipe, nem
+        // que feche a aba logo depois de cadastrar.
+        const { data, error } = await supabase!.auth.signUp({
+          email,
+          password: senha,
+          options: { data: { nome: nome.trim(), equipes } },
+        })
         if (error) throw error
         if (!data.session) {
           setAviso('Conta criada! Confira seu e-mail para confirmar antes de entrar.')
@@ -106,6 +122,19 @@ export function Auth() {
             />
           </Campo>
 
+          {modo === 'cadastrar' ? (
+            <Campo rotulo="Nome e sobrenome" dica="é o que sai no campo Prof. do plano">
+              <input
+                type="text"
+                required
+                autoComplete="name"
+                placeholder="Ex.: Nicolas Correa"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+              />
+            </Campo>
+          ) : null}
+
           {modo !== 'recuperar' ? (
             <Campo rotulo="Senha" dica={modo === 'cadastrar' ? 'pelo menos 6 caracteres' : undefined}>
               <input
@@ -117,6 +146,31 @@ export function Auth() {
                 onChange={(e) => setSenha(e.target.value)}
               />
             </Campo>
+          ) : null}
+
+          {modo === 'cadastrar' ? (
+            <fieldset className="equipes-escolha">
+              <legend>Qual equipe você faz parte?</legend>
+              <p className="explica">
+                Marque quantas forem — quem dá aula no Integral e num curso faz parte das duas.
+                É por aqui que você enxerga os planos compartilhados pelos colegas.
+              </p>
+              <div className="equipes-lista">
+                {EQUIPES_DE_CURSO.map((equipe) => (
+                  <label
+                    className={`equipe-opcao${equipes.includes(equipe.id) ? ' marcada' : ''}`}
+                    key={equipe.id}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={equipes.includes(equipe.id)}
+                      onChange={() => alternarEquipe(equipe.id)}
+                    />
+                    <span>{equipe.nome}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
           ) : null}
 
           {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}

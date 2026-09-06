@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { excluirPlano, listarPlanos, type PlanoSalvo } from '../supabase/planos'
+import { nomeDaEquipe } from '../constants'
+import { compartilharPlano, excluirPlano, listarPlanos, type PlanoSalvo } from '../supabase/planos'
 import { Aviso } from './ui'
 
 function dataFormatada(iso: string): string {
@@ -26,21 +27,40 @@ function tituloDoPlano(plano: PlanoSalvo): string {
  * confirmação, porque não tem como desfazer.
  */
 export function MeusPlanos({
+  minhasEquipes,
   aoFechar,
   aoAbrirPlano,
 }: {
+  /** Equipes de quem está logado — as opções de compartilhamento possíveis. */
+  minhasEquipes: string[]
   aoFechar: () => void
   aoAbrirPlano: (plano: PlanoSalvo) => void
 }) {
   const [planos, setPlanos] = useState<PlanoSalvo[] | null>(null)
   const [erro, setErro] = useState('')
   const [excluindo, setExcluindo] = useState<string | null>(null)
+  const [compartilhando, setCompartilhando] = useState<string | null>(null)
 
   useEffect(() => {
     listarPlanos()
       .then(setPlanos)
       .catch((e) => setErro(e instanceof Error ? e.message : 'Não consegui carregar seus planos.'))
   }, [])
+
+  async function mudarCompartilhamento(id: string, equipeId: string | null) {
+    setCompartilhando(id)
+    setErro('')
+    try {
+      await compartilharPlano(id, equipeId)
+      setPlanos(
+        (atual) => atual?.map((p) => (p.id === id ? { ...p, equipe_id: equipeId } : p)) ?? null,
+      )
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não consegui mudar o compartilhamento.')
+    } finally {
+      setCompartilhando(null)
+    }
+  }
 
   async function excluir(id: string) {
     if (!confirm('Excluir este plano salvo? Não tem como desfazer.')) return
@@ -80,9 +100,25 @@ export function MeusPlanos({
                   <span className="lista-planos-data">
                     {p.dados.semana ? `${p.dados.semana} · ` : ''}
                     Salvo em {dataFormatada(p.atualizado_em)}
+                    {p.equipe_id ? ` · Compartilhado com ${nomeDaEquipe(p.equipe_id)}` : ''}
                   </span>
                 </div>
                 <div className="lista-planos-acoes">
+                  {minhasEquipes.length ? (
+                    <select
+                      value={p.equipe_id ?? ''}
+                      disabled={compartilhando === p.id}
+                      aria-label="Compartilhamento"
+                      onChange={(e) => mudarCompartilhamento(p.id, e.target.value || null)}
+                    >
+                      <option value="">Somente eu</option>
+                      {minhasEquipes.map((id) => (
+                        <option value={id} key={id}>
+                          Equipe {nomeDaEquipe(id)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
                   <button type="button" className="botao secundario" onClick={() => aoAbrirPlano(p)}>
                     Abrir
                   </button>

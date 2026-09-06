@@ -4,11 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import logoMicroKa from './assets/logo-micro-ka.png'
 import { Auth } from './components/Auth'
 import { Formulario } from './components/Formulario'
+import { Gestao } from './components/Gestao'
 import { MeusPlanos } from './components/MeusPlanos'
+import { PlanosDaEquipe } from './components/PlanosDaEquipe'
 import { RedefinirSenha } from './components/RedefinirSenha'
-import { planoVazio } from './constants'
+import { EQUIPE_GESTAO, planoVazio } from './constants'
 import { planoDeAmostra } from './planoDeAmostra'
 import { supabase } from './supabase/client'
+import { carregarMinhaConta, type MinhaConta } from './supabase/equipes'
 import { salvarPlano, type PlanoSalvo } from './supabase/planos'
 import type { PlanoDeAula } from './types'
 
@@ -41,7 +44,31 @@ function AppLogado({ sessao }: { sessao: Session }) {
   const rascunho = useMemo(() => lerRascunho(chaveRascunho), [chaveRascunho])
   const [plano, setPlano] = useState<PlanoDeAula>(() => rascunho ?? planoVazio())
   const [planoAtualId, setPlanoAtualId] = useState<string | null>(null)
+  const [equipeCompartilhada, setEquipeCompartilhada] = useState<string | null>(null)
   const [mostrarMeusPlanos, setMostrarMeusPlanos] = useState(false)
+  const [mostrarPlanosDaEquipe, setMostrarPlanosDaEquipe] = useState(false)
+  const [mostrarGestao, setMostrarGestao] = useState(false)
+  const [conta, setConta] = useState<MinhaConta | null>(null)
+
+  // Perfil e equipes vêm do banco uma vez por sessão. Se falhar (rede, ou
+  // migração ainda não aplicada), o app segue funcionando como antes: sem os
+  // botões de equipe, mas com o gerador e os planos da própria conta.
+  useEffect(() => {
+    let ativo = true
+    carregarMinhaConta()
+      .then((c) => ativo && setConta(c))
+      .catch(() => ativo && setConta(null))
+    return () => {
+      ativo = false
+    }
+  }, [sessao.user.id])
+
+  // Compartilhar é sempre com uma equipe de curso: a Gestão enxerga tudo de
+  // qualquer jeito, então não faz sentido oferecê-la como destino.
+  const equipesDeCurso = useMemo(
+    () => (conta?.equipes ?? []).filter((id) => id !== EQUIPE_GESTAO),
+    [conta],
+  )
 
   useEffect(() => {
     if (plano === planoDeAmostra) return
@@ -61,6 +88,7 @@ function AppLogado({ sessao }: { sessao: Session }) {
     if (confirm('Isso apaga tudo o que você preencheu nesta página. Continuar?')) {
       setPlano(planoVazio())
       setPlanoAtualId(null)
+      setEquipeCompartilhada(null)
     }
   }, [])
 
@@ -70,7 +98,9 @@ function AppLogado({ sessao }: { sessao: Session }) {
     // com planoVazio() a tela quebra tentando ler undefined.
     setPlano({ ...planoVazio(), ...salvo.dados })
     setPlanoAtualId(salvo.id)
+    setEquipeCompartilhada(salvo.equipe_id ?? null)
     setMostrarMeusPlanos(false)
+    setMostrarPlanosDaEquipe(false)
   }, [])
 
   return (
@@ -95,6 +125,20 @@ function AppLogado({ sessao }: { sessao: Session }) {
         <button type="button" className="botao discreto" onClick={() => setMostrarMeusPlanos(true)}>
           Meus planos
         </button>
+        {conta ? (
+          <button
+            type="button"
+            className="botao discreto"
+            onClick={() => setMostrarPlanosDaEquipe(true)}
+          >
+            Planos da equipe
+          </button>
+        ) : null}
+        {conta?.gestao ? (
+          <button type="button" className="botao discreto" onClick={() => setMostrarGestao(true)}>
+            Gestão
+          </button>
+        ) : null}
         <button type="button" className="botao discreto" onClick={limpar}>
           Limpar página
         </button>
@@ -113,15 +157,33 @@ function AppLogado({ sessao }: { sessao: Session }) {
         aoMudar={mudar}
         aoLimpar={limpar}
         planoSalvoId={planoAtualId}
+        minhasEquipes={equipesDeCurso}
+        equipeCompartilhada={equipeCompartilhada}
+        aoMudarEquipeCompartilhada={setEquipeCompartilhada}
         aoSalvar={async (dadosAtuais) => {
-          const salvo = await salvarPlano(planoAtualId, dadosAtuais)
+          const salvo = await salvarPlano(planoAtualId, dadosAtuais, equipeCompartilhada)
           setPlanoAtualId(salvo.id)
         }}
       />
 
       {mostrarMeusPlanos ? (
-        <MeusPlanos aoFechar={() => setMostrarMeusPlanos(false)} aoAbrirPlano={abrirPlanoSalvo} />
+        <MeusPlanos
+          minhasEquipes={equipesDeCurso}
+          aoFechar={() => setMostrarMeusPlanos(false)}
+          aoAbrirPlano={abrirPlanoSalvo}
+        />
       ) : null}
+
+      {mostrarPlanosDaEquipe && conta ? (
+        <PlanosDaEquipe
+          minhasEquipes={equipesDeCurso}
+          perfil={conta.perfil}
+          aoFechar={() => setMostrarPlanosDaEquipe(false)}
+          aoAbrirPlano={abrirPlanoSalvo}
+        />
+      ) : null}
+
+      {mostrarGestao && conta?.gestao ? <Gestao aoFechar={() => setMostrarGestao(false)} /> : null}
     </>
   )
 }

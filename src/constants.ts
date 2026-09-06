@@ -38,6 +38,38 @@ export const CURSOS = [
 ] as const
 
 /**
+ * Equipes do sistema: uma por curso, mais a Gestão.
+ *
+ * É por equipe que um plano é compartilhado — um professor pode estar em mais
+ * de uma (quem dá aula no Integral e num curso está nas duas, e escolhe com
+ * qual delas compartilhar cada plano).
+ *
+ * Espelha a tabela `equipes` do Supabase (`supabase/migrations`): mexeu aqui,
+ * mexa lá também — o `id` é o que vai no banco, o `nome` é só o rótulo da tela.
+ */
+export const EQUIPES = [
+  { id: 'games', nome: 'Oficina de Games', curso: 'Oficina de Games' },
+  { id: 'ia', nome: 'Inteligência Artificial', curso: 'Inteligência Artificial' },
+  { id: 'ambientes', nome: 'Ambientes Inteligentes', curso: 'Ambientes Inteligentes' },
+  { id: 'comunicacao', nome: 'Comunicação Digital', curso: 'Comunicação Digital' },
+  { id: 'metaverso', nome: 'Metaverso', curso: 'Metaverso' },
+  { id: 'integral', nome: 'Integral', curso: 'Integral' },
+  /** Não é um curso: é quem administra as equipes e enxerga todos os planos. */
+  { id: 'gestao', nome: 'Gestão', curso: null },
+] as const
+
+/** A equipe que administra as outras — não aparece no cadastro. */
+export const EQUIPE_GESTAO = 'gestao'
+
+/** As equipes que um professor pode escolher ao se cadastrar. */
+export const EQUIPES_DE_CURSO = EQUIPES.filter((e) => e.id !== EQUIPE_GESTAO)
+
+export function nomeDaEquipe(id: string | null): string {
+  if (!id) return ''
+  return EQUIPES.find((e) => e.id === id)?.nome ?? id
+}
+
+/**
  * Ciclos possíveis. Trainee/Júnior/Sênior são a trilha do Núcleo WIT; os anos
  * (1º a 9º) são para o Integral, que organiza as turmas por ano escolar.
  */

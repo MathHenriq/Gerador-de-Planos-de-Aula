@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 
-import { CICLOS, CURSOS, DURACOES_DISPONIVEIS, formatarDuracao } from '../constants'
+import {
+  CICLOS,
+  CURSOS,
+  DURACOES_DISPONIVEIS,
+  formatarDuracao,
+  nomeDaEquipe,
+} from '../constants'
 import { nomeDoArquivo } from '../nomeDoDocumento'
 import { diagnosticar } from '../pdf/diagnostico'
 import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
@@ -22,6 +28,9 @@ export function Formulario({
   aoLimpar,
   planoSalvoId,
   aoSalvar,
+  minhasEquipes = [],
+  equipeCompartilhada = null,
+  aoMudarEquipeCompartilhada,
 }: {
   plano: PlanoDeAula
   aoMudar: (mudanca: Partial<PlanoDeAula>) => void
@@ -30,6 +39,11 @@ export function Formulario({
   planoSalvoId?: string | null
   /** Ausente quando não há login (ver `App.tsx`) — some o botão "Salvar". */
   aoSalvar?: (plano: PlanoDeAula) => Promise<void>
+  /** Equipes do professor: as opções de "compartilhar com". */
+  minhasEquipes?: string[]
+  /** Equipe com quem este plano fica compartilhado; `null` = somente ele. */
+  equipeCompartilhada?: string | null
+  aoMudarEquipeCompartilhada?: (equipeId: string | null) => void
 }) {
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState('')
@@ -279,7 +293,40 @@ export function Formulario({
 
           {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
           {erroSalvar ? <Aviso tipo="erro">{erroSalvar}</Aviso> : null}
-          {salvoAgora ? <Aviso tipo="info">Plano salvo na sua conta.</Aviso> : null}
+          {salvoAgora ? (
+            <Aviso tipo="info">
+              Plano salvo na sua conta
+              {equipeCompartilhada
+                ? ` e compartilhado com a equipe ${nomeDaEquipe(equipeCompartilhada)}.`
+                : ' — somente você vê.'}
+            </Aviso>
+          ) : null}
+
+          {aoSalvar && minhasEquipes.length && aoMudarEquipeCompartilhada ? (
+            <div className="compartilhamento">
+              <Campo
+                rotulo="Ao salvar"
+                dica="quem mais enxerga este plano"
+              >
+                <select
+                  value={equipeCompartilhada ?? ''}
+                  onChange={(e) => aoMudarEquipeCompartilhada(e.target.value || null)}
+                >
+                  <option value="">Manter somente para mim</option>
+                  {minhasEquipes.map((id) => (
+                    <option value={id} key={id}>
+                      Compartilhar com a equipe {nomeDaEquipe(id)}
+                    </option>
+                  ))}
+                </select>
+              </Campo>
+              <p className="explica">
+                Compartilhado, o plano aparece em “Planos da equipe” para os colegas, que podem
+                fazer uma cópia com o nome e os núcleos deles. O seu original continua sendo só
+                seu — a cópia é um plano à parte.
+              </p>
+            </div>
+          ) : null}
 
           <div className="acoes">
             <button type="button" className="botao" onClick={baixar} disabled={baixando}>

@@ -121,11 +121,65 @@ salvos — a geração do PDF continua 100% no navegador, sem servidor nenhum no
   variáveis configuradas, `src/supabase/client.ts` fica `null` e a tela de login mostra um
   aviso em vez de travar.
 - **Onde mexer**: `src/supabase/client.ts` (o cliente), `src/supabase/planos.ts` (as
-  funções de salvar/listar/excluir), `src/components/Auth.tsx` (login/cadastro/"esqueci
+  funções de salvar/listar/excluir/compartilhar/copiar), `src/supabase/equipes.ts` (perfil,
+  equipes e as funções da Gestão), `src/components/Auth.tsx` (login/cadastro/"esqueci
   minha senha"), `src/components/RedefinirSenha.tsx` (escolher a senha nova),
-  `src/components/MeusPlanos.tsx` (a lista de planos salvos). O esquema do banco (tabela +
-  RLS + trigger de `atualizado_em`) está aplicado direto no projeto Supabase, não em
-  arquivo neste repo.
+  `src/components/MeusPlanos.tsx` (a lista de planos salvos). O esquema das equipes está
+  em [`supabase/migrations`](supabase/migrations); o da tabela `planos` original foi
+  aplicado à mão no painel, antes deste arquivo existir.
+
+## Equipes e planos compartilhados
+
+O problema que isso resolve: dois professores do mesmo curso davam a mesma aula, e o
+segundo copiava o plano do primeiro **campo por campo**, a partir do PDF.
+
+- **Equipes**: uma por curso (Oficina de Games, Inteligência Artificial, Comunicação
+  Digital, Metaverso, Ambientes Inteligentes, Integral) mais a **Gestão**. Um professor
+  pode estar em mais de uma — quem dá aula no Integral e num curso está nas duas, e vê os
+  planos das duas. A lista fica em `EQUIPES`, em [`src/constants.ts`](src/constants.ts), e
+  espelha a tabela `equipes` do banco: mexeu num lado, mexa no outro.
+- **No cadastro** o professor responde *"Qual equipe você faz parte?"* (e o nome e
+  sobrenome, que é o que sai no campo *Prof.*). Isso vai como metadado do usuário, e uma
+  trigger no banco (`ao_criar_usuario`) cria o perfil e os vínculos — ninguém entra sem
+  equipe, e ninguém se coloca na Gestão sozinho (a trigger descarta `gestao` do metadado,
+  que é escrito pelo próprio usuário).
+- **Compartilhar**: ao salvar, o professor escolhe entre *"Manter somente para mim"* e
+  *"Compartilhar com a equipe X"* — só entre as equipes dele. Dá para mudar depois, na
+  lista de "Meus planos".
+- **Copiar**: em **"Planos da equipe"**, o colega abre um plano compartilhado (aparece
+  "Compartilhado por Fulano") e clica em **"Fazer uma cópia para mim"**. A cópia entra na
+  conta dele com todo o conteúdo do original, trocando só o *Prof.* pelo nome dele e os
+  núcleos pelos que ele costuma atender (`perfis.escolas_padrao`, que se atualiza a cada
+  cópia). A cópia nasce privada, e o original do autor não é tocado.
+- **Gestão**: equipe à parte, com um botão próprio no cabeçalho. Vê todos os professores e
+  move qualquer um de equipe pela tela, e enxerga todos os planos — inclusive os não
+  compartilhados —, mas **só de leitura**: não edita nem exclui plano de professor.
+- **Quem garante isso é o banco, não a tela.** As políticas de RLS
+  (`supabase/migrations/20260906_equipes.sql`) decidem quem lê e escreve o quê; os botões
+  que somem são só conveniência. Um professor não consegue, nem chamando a API direto,
+  ler plano privado de outro, compartilhar com equipe de que não faz parte, editar plano
+  alheio, se promover à Gestão ou remexer nas equipes dos outros.
+
+### Aplicar no Supabase
+
+O SQL está em [`supabase/migrations/20260906_equipes.sql`](supabase/migrations/20260906_equipes.sql):
+cole o arquivo inteiro no **SQL Editor** do projeto e rode uma vez. Ele cria as tabelas
+(`equipes`, `perfis`, `membros_equipe`), as colunas novas de `planos`, a visão
+`planos_visao`, as políticas de RLS, a trigger de cadastro — e já faz a carga inicial:
+perfil de todo mundo (com o nome tirado do último plano salvo), as escolas habituais e as
+equipes de cada professor conforme a lista da coordenação.
+
+É idempotente, mas a carga inicial de equipes é **de partida**: rodar de novo depois de a
+Gestão ter remanejado alguém recoloca a pessoa na equipe original. Depois da primeira
+execução, use a tela da Gestão.
+
+Para acrescentar alguém à Gestão (o rodapé do arquivo tem o mesmo trecho):
+
+```sql
+insert into public.membros_equipe (professor_id, equipe_id)
+select id, 'gestao' from auth.users where lower(email) = lower('fulano@exemplo.com')
+on conflict do nothing;
+```
 
 ## Estrutura
 
@@ -142,9 +196,13 @@ src/
     validar.ts      única regra automática: o código da habilidade tem que começar com "EF"
   supabase/
     client.ts       cliente do Supabase (login + banco)
-    planos.ts       salvar/listar/excluir planos da conta do professor
-  components/     interface (inclui Auth.tsx e MeusPlanos.tsx)
-  constants.ts    núcleos, cursos, ciclos, duração
+    planos.ts       salvar/listar/excluir/compartilhar/copiar planos
+    equipes.ts      perfil do professor, equipes dele e as funções da Gestão
+  components/     interface (inclui Auth.tsx, MeusPlanos.tsx, PlanosDaEquipe.tsx,
+                  Gestao.tsx)
+  constants.ts    núcleos, cursos, equipes, ciclos, duração
+supabase/
+  migrations/     o esquema das equipes, para rodar no SQL Editor
   nomeDoDocumento.ts  nome padronizado do arquivo e do título do PDF
 scripts/          geradores e conferência de layout
 ```
