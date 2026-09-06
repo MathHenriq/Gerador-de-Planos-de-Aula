@@ -155,8 +155,11 @@ segundo copiava o plano do primeiro **campo por campo**, a partir do PDF.
 - **Compartilhar**: ao salvar, o professor escolhe entre *"Manter somente para mim"* e
   *"Compartilhar com a equipe X"* — só entre as equipes dele. Dá para mudar depois, na
   lista de "Meus planos".
-- **Copiar**: em **"Planos da equipe"**, o colega abre um plano compartilhado (aparece
-  "Compartilhado por Fulano") e clica em **"Fazer uma cópia para mim"**. A cópia entra na
+- **Copiar**: em **"Planos da equipe"** aparece tudo o que está compartilhado com as
+  equipes do professor — inclusive o que ele mesmo compartilhou, marcado como "por você"
+  (é a confirmação de que a equipe está enxergando; sem isso, quem compartilha via a lista
+  vazia e concluía que não tinha funcionado). O colega abre um plano
+  ("Compartilhado por Fulano") e clica em **"Fazer uma cópia para mim"**. A cópia entra na
   conta dele com todo o conteúdo do original, trocando só o *Prof.* pelo nome dele e os
   núcleos pelos que ele costuma atender (`perfis.escolas_padrao`, que se atualiza a cada
   cópia). A cópia nasce privada, e o original do autor não é tocado.

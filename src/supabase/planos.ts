@@ -95,10 +95,15 @@ export async function excluirPlano(id: string): Promise<void> {
 }
 
 /**
- * Os planos que os colegas compartilharam com as minhas equipes.
+ * Tudo o que está compartilhado com as minhas equipes — inclusive o que eu
+ * mesmo compartilhei.
  *
- * Os meus próprios ficam de fora: eles já estão em "Meus planos", e ver o
- * mesmo plano nas duas listas confunde mais do que ajuda.
+ * A primeira versão escondia os meus, com o argumento de que já estão em
+ * "Meus planos". Na prática isso deixava quem compartilha sem nenhuma
+ * confirmação: o professor marcava "compartilhar com a equipe", abria a aba
+ * da equipe e via "ninguém compartilhou nada" — indistinguível de ter falhado.
+ * A tela marca os meus com "por você"; ver o próprio plano na lista é
+ * justamente a prova de que a equipe está vendo.
  */
 export async function listarPlanosDaEquipe(): Promise<PlanoDaEquipe[]> {
   const cliente = exigirSupabase()
@@ -106,7 +111,6 @@ export async function listarPlanosDaEquipe(): Promise<PlanoDaEquipe[]> {
     .from('planos_visao')
     .select(COLUNAS_VISAO)
     .not('equipe_id', 'is', null)
-    .neq('professor_id', await meuId())
     .order('atualizado_em', { ascending: false })
 
   if (error) throw error

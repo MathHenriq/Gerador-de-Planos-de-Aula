@@ -21,7 +21,8 @@ function tituloDoPlano(plano: PlanoDaEquipe): string {
 }
 
 /** "Compartilhado por Nicolas Correa" — cai no e-mail quando não há nome. */
-function autoria(plano: PlanoDaEquipe): string {
+function autoria(plano: PlanoDaEquipe, meuId: string): string {
+  if (plano.professor_id === meuId) return 'Compartilhado por você'
   const nome = plano.autor_nome?.trim() || plano.dados.professor?.trim() || plano.autor_email || ''
   return nome ? `Compartilhado por ${nome}` : 'Compartilhado por um colega'
 }
@@ -102,7 +103,7 @@ export function PlanosDaEquipe({
             </button>
 
             <p className="explica">
-              {autoria(aberto)} · {nomeDaEquipe(aberto.equipe_id)}
+              {autoria(aberto, perfil.id)} · {nomeDaEquipe(aberto.equipe_id)}
               {aberto.dados.semana ? ` · Semana ${aberto.dados.semana}` : ''}
             </p>
 
@@ -135,42 +136,58 @@ export function PlanosDaEquipe({
               </dd>
             </dl>
 
-            <div className="cartao-copia">
-              <h3>Fazer uma cópia para mim</h3>
-              <p className="explica">
-                A cópia entra na sua conta com todo o conteúdo do plano — trocando só o professor e
-                os núcleos pelos seus. Ela nasce <strong>somente sua</strong>: compartilhe depois, se
-                quiser.
-              </p>
-
-              <Campo rotulo="Prof." dica="sai no cabeçalho do PDF">
-                <input
-                  type="text"
-                  value={nome}
-                  placeholder="Seu nome e sobrenome"
-                  onChange={(e) => setNome(e.target.value)}
-                />
-              </Campo>
-
-              <p className="explica" style={{ marginTop: 12 }}>
-                Seus núcleos, na ordem da sua semana:
-              </p>
-              <SeletorDeEscolas escolhidas={escolas} aoMudar={setEscolas} />
-
-              <div className="acoes" style={{ marginTop: 14 }}>
-                <button
-                  type="button"
-                  className="botao"
-                  onClick={criarCopia}
-                  disabled={copiando || !nome.trim() || escolas.length === 0}
-                >
-                  {copiando ? 'Copiando…' : 'Criar minha cópia'}
-                </button>
-                {!nome.trim() || escolas.length === 0 ? (
-                  <span className="dica">Preencha o nome e marque ao menos um núcleo.</span>
-                ) : null}
+            {aberto.professor_id === perfil.id ? (
+              <div className="cartao-copia">
+                <h3>Este plano é seu</h3>
+                <p className="explica">
+                  Ele está compartilhado com a equipe {nomeDaEquipe(aberto.equipe_id)} — é assim
+                  que os colegas o enxergam. Para mudar o conteúdo ou deixar de compartilhar,
+                  abra e edite normalmente.
+                </p>
+                <div className="acoes" style={{ marginTop: 12 }}>
+                  <button type="button" className="botao" onClick={() => aoAbrirPlano(aberto)}>
+                    Abrir para editar
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="cartao-copia">
+                <h3>Fazer uma cópia para mim</h3>
+                <p className="explica">
+                  A cópia entra na sua conta com todo o conteúdo do plano — trocando só o professor e
+                  os núcleos pelos seus. Ela nasce <strong>somente sua</strong>: compartilhe depois, se
+                  quiser.
+                </p>
+
+                <Campo rotulo="Prof." dica="sai no cabeçalho do PDF">
+                  <input
+                    type="text"
+                    value={nome}
+                    placeholder="Seu nome e sobrenome"
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                </Campo>
+
+                <p className="explica" style={{ marginTop: 12 }}>
+                  Seus núcleos, na ordem da sua semana:
+                </p>
+                <SeletorDeEscolas escolhidas={escolas} aoMudar={setEscolas} />
+
+                <div className="acoes" style={{ marginTop: 14 }}>
+                  <button
+                    type="button"
+                    className="botao"
+                    onClick={criarCopia}
+                    disabled={copiando || !nome.trim() || escolas.length === 0}
+                  >
+                    {copiando ? 'Copiando…' : 'Criar minha cópia'}
+                  </button>
+                  {!nome.trim() || escolas.length === 0 ? (
+                    <span className="dica">Preencha o nome e marque ao menos um núcleo.</span>
+                  ) : null}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -204,8 +221,10 @@ export function PlanosDaEquipe({
               </p>
             ) : visiveis.length === 0 ? (
               <p className="explica">
-                Nenhum colega compartilhou plano
-                {filtro === 'todas' ? ' com as suas equipes' : ` com ${nomeDaEquipe(filtro)}`} ainda.
+                Ainda não há plano compartilhado
+                {filtro === 'todas' ? ' com as suas equipes' : ` com a equipe ${nomeDaEquipe(filtro)}`}.
+                Quando alguém (você inclusive) marcar “Compartilhar com a equipe” ao salvar, o
+                plano aparece aqui.
               </p>
             ) : (
               <ul className="lista-planos">
@@ -214,11 +233,14 @@ export function PlanosDaEquipe({
                     <div>
                       <strong>{tituloDoPlano(p)}</strong>
                       <span className="lista-planos-data">
-                        {autoria(p)} · {nomeDaEquipe(p.equipe_id)}
+                        {autoria(p, perfil.id)} · {nomeDaEquipe(p.equipe_id)}
                         {p.dados.semana ? ` · ${p.dados.semana}` : ''} · {dataFormatada(p.atualizado_em)}
                       </span>
                     </div>
                     <div className="lista-planos-acoes">
+                      {p.professor_id === perfil.id ? (
+                        <span className="etiqueta ok">seu</span>
+                      ) : null}
                       <button
                         type="button"
                         className="botao secundario"
