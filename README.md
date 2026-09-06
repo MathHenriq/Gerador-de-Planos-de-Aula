@@ -105,11 +105,22 @@ nome final ao lado do botão de baixar.
 O gerador usa [Supabase](https://supabase.com) só para login e para guardar os planos
 salvos — a geração do PDF continua 100% no navegador, sem servidor nenhum no meio.
 
-- **Login**: e-mail e senha (`supabase.auth`). Não tem link mágico nem Google — decisão
-  do instrutor, mais previsível pro professor. A confirmação de e-mail no primeiro
-  cadastro está **desligada** (Authentication → Providers → Email → "Confirm email", no
+- **Login**: e-mail e senha, ou **entrar com o Google** (`supabase.auth`). Não tem link
+  mágico. A confirmação de e-mail no primeiro cadastro está **desligada** (Authentication → Providers → Email → "Confirm email", no
   painel do projeto) — quem se cadastra já entra na hora, sem precisar clicar em link
   nenhum.
+- **Entrar com o Google**: precisa do provedor ligado no painel (Authentication →
+  Providers → Google) com Client ID e Secret de um OAuth client do Google Cloud Console,
+  cuja "Authorized redirect URI" é `https://<projeto>.supabase.co/auth/v1/callback`. Quem
+  entra por aí não passa pelo formulário de cadastro: o Google informa nome e e-mail, mas
+  não a equipe — então, ao entrar sem equipe nenhuma, o app abre a tela **"Falta só isto"**
+  (`src/components/CompletarPerfil.tsx`) pedindo nome e equipe. Dá para adiar e continuar
+  gerando PDF; a tela volta na próxima entrada, enquanto não houver equipe. O aproveitamento
+  do nome vindo do Google está em
+  [`supabase/migrations/20260906_login_google.sql`](supabase/migrations/20260906_login_google.sql).
+  Vale saber: com o Google ligado, qualquer pessoa com conta Google consegue criar acesso —
+  como já acontece com o cadastro por e-mail, que também é aberto. Quem não está em equipe
+  não enxerga plano de ninguém (RLS), então o pior caso é uma conta vazia.
 - **Esqueci minha senha**: link na tela de login (`src/components/Auth.tsx`) chama
   `resetPasswordForEmail`, que manda um e-mail com um link de recuperação. Ao abrir esse
   link, o Supabase já loga a pessoa numa sessão temporária e dispara o evento

@@ -73,6 +73,27 @@ export async function atualizarMeuPerfil(mudanca: {
   if (error) throw error
 }
 
+/**
+ * Entra nas equipes escolhidas na tela de "complete seu perfil".
+ *
+ * A Gestão fica de fora da lista oferecida, e o banco recusa de qualquer
+ * forma (política `membros_insercao`) — ninguém se promove sozinho.
+ */
+export async function entrarNasEquipes(equipes: string[]): Promise<void> {
+  const cliente = exigirSupabase()
+  const { data: sessao } = await cliente.auth.getSession()
+  const id = sessao.session?.user.id
+  if (!id) throw new Error('Sua sessão expirou. Entre de novo.')
+
+  const novas = equipes.filter((e) => e !== EQUIPE_GESTAO)
+  if (!novas.length) return
+
+  const { error } = await cliente
+    .from('membros_equipe')
+    .insert(novas.map((equipe_id) => ({ professor_id: id, equipe_id })))
+  if (error) throw error
+}
+
 // --------------------------------------------------------------- gestão ---
 // Daqui para baixo, só a Gestão consegue usar: as políticas de RLS recusam
 // as chamadas de qualquer outra pessoa (não é a tela que protege, é o banco).

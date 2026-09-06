@@ -1107,3 +1107,41 @@ textarea {
   margin-left: 8px;
   vertical-align: middle;
 }
+
+/* --- entrada pelo Google --- */
+
+.separador-ou {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 12px;
+  color: var(--tinta-suave);
+  font-size: 12px;
+}
+
+.separador-ou::before,
+.separador-ou::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--borda);
+}
+
+.botao-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.botao-google svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.auth-cartao .explica {
+  font-size: 12px;
+  line-height: 1.45;
+}

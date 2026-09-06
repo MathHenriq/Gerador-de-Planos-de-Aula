@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import logoMicroKa from './assets/logo-micro-ka.png'
 import { Auth } from './components/Auth'
+import { CompletarPerfil } from './components/CompletarPerfil'
 import { Formulario } from './components/Formulario'
 import { Gestao } from './components/Gestao'
 import { ImportarPlano } from './components/ImportarPlano'
@@ -55,6 +56,7 @@ function AppLogado({ sessao }: { sessao: Session }) {
   const [carregandoConta, setCarregandoConta] = useState(true)
   const [erroConta, setErroConta] = useState('')
   const [tentativa, setTentativa] = useState(0)
+  const [adiouPerfil, setAdiouPerfil] = useState(false)
 
   // Perfil e equipes vêm do banco uma vez por sessão.
   //
@@ -94,7 +96,6 @@ function AppLogado({ sessao }: { sessao: Session }) {
   )
 
   useEffect(() => {
-    if (plano === planoDeAmostra) return
     try {
       localStorage.setItem(chaveRascunho, JSON.stringify(plano))
     } catch {
@@ -135,16 +136,6 @@ function AppLogado({ sessao }: { sessao: Session }) {
           <div className="subtitulo">Núcleo WIT · Micro Ka</div>
         </div>
         <div className="espaco" />
-        <button
-          type="button"
-          className="botao discreto"
-          onClick={() => {
-            setPlano(planoDeAmostra)
-            setPlanoAtualId(null)
-          }}
-        >
-          Ver um exemplo preenchido
-        </button>
         <button type="button" className="botao discreto" onClick={() => setMostrarMeusPlanos(true)}>
           Meus planos
         </button>
@@ -237,6 +228,14 @@ function AppLogado({ sessao }: { sessao: Session }) {
       ) : null}
 
       {mostrarGestao && conta?.gestao ? <Gestao aoFechar={() => setMostrarGestao(false)} /> : null}
+
+      {conta && !conta.equipes.length && !adiouPerfil ? (
+        <CompletarPerfil
+          perfil={conta.perfil}
+          aoFechar={() => setAdiouPerfil(true)}
+          aoConcluir={() => setTentativa((n) => n + 1)}
+        />
+      ) : null}
 
       {mostrarImportar ? (
         <ImportarPlano
