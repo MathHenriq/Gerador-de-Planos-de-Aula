@@ -11,11 +11,14 @@ import { MeusPlanos } from './components/MeusPlanos'
 import { PlanosDaEquipe } from './components/PlanosDaEquipe'
 import { RedefinirSenha } from './components/RedefinirSenha'
 import { Aviso } from './components/ui'
-import { EQUIPE_GESTAO, planoVazio } from './constants'
+import { EQUIPE_GESTAO, EQUIPES, planoVazio } from './constants'
+import { normalizarPlano } from './plano'
 import { planoDeAmostra } from './planoDeAmostra'
+import { rotuloDaSemana, semanasPermitidas } from './semanas'
 import { supabase } from './supabase/client'
 import { carregarMinhaConta, type MinhaConta } from './supabase/equipes'
 import { salvarPlano, type PlanoSalvo } from './supabase/planos'
+import { listarResponsaveis, type ResponsavelDaSemana } from './supabase/semanas'
 import type { PlanoDeAula } from './types'
 
 const PREFIXO_RASCUNHO = 'nucleo-wit:plano-de-aula'
@@ -32,7 +35,7 @@ function lerRascunho(chave: string): PlanoDeAula | null {
       localStorage.removeItem(chave)
       return null
     }
-    return { ...planoVazio(), ...(JSON.parse(bruto) as PlanoDeAula) }
+    return normalizarPlano(JSON.parse(bruto) as PlanoDeAula)
   } catch {
     return null
   }
@@ -57,6 +60,9 @@ function AppLogado({ sessao }: { sessao: Session }) {
   const [erroConta, setErroConta] = useState('')
   const [tentativa, setTentativa] = useState(0)
   const [adiouPerfil, setAdiouPerfil] = useState(false)
+  const [responsaveis, setResponsaveis] = useState<ResponsavelDaSemana[]>([])
+  const [versaoResponsaveis, setVersaoResponsaveis] = useState(0)
+  const recarregarResponsaveis = useCallback(() => setVersaoResponsaveis((n) => n + 1), [])
 
   // Perfil e equipes vêm do banco uma vez por sessão.
   //
@@ -88,6 +94,22 @@ function AppLogado({ sessao }: { sessao: Session }) {
     }
   }, [sessao.user.id, tentativa])
 
+  // Quem assumiu cada semana aberta, nas equipes que eu enxergo. Recarrega
+  // quando alguém assume ou larga uma semana por esta tela; mudanças feitas
+  // por colegas aparecem ao reabrir, e o banco barra o que chegar atrasado.
+  useEffect(() => {
+    if (!conta) return
+    let ativo = true
+    listarResponsaveis(semanasPermitidas().map((s) => s.inicio))
+      .then((lista) => {
+        if (ativo) setResponsaveis(lista)
+      })
+      .catch((e: unknown) => console.error('Falha ao carregar os responsáveis das semanas:', e))
+    return () => {
+      ativo = false
+    }
+  }, [conta, versaoResponsaveis])
+
   // Compartilhar é sempre com uma equipe de curso: a Gestão enxerga tudo de
   // qualquer jeito, então não faz sentido oferecê-la como destino.
   const equipesDeCurso = useMemo(
@@ -118,14 +140,43 @@ function AppLogado({ sessao }: { sessao: Session }) {
 
   const abrirPlanoSalvo = useCallback((salvo: PlanoSalvo) => {
     // Igual ao rascunho do localStorage: um plano salvo antes de um campo
-    // novo existir (ex.: "observacao") não tem essa chave, e sem o merge
-    // com planoVazio() a tela quebra tentando ler undefined.
-    setPlano({ ...planoVazio(), ...salvo.dados })
+    // novo existir (ex.: "observacao") não tem essa chave, e sem
+    // normalizarPlano() a tela quebra tentando ler undefined.
+    setPlano(normalizarPlano(salvo.dados))
     setPlanoAtualId(salvo.id)
     setEquipeCompartilhada(salvo.equipe_id ?? null)
     setMostrarMeusPlanos(false)
     setMostrarPlanosDaEquipe(false)
   }, [])
+
+  /**
+   * Plano novo da equipe para a semana que o professor acabou de assumir: já
+   * sai com curso, semana, nome e núcleos dele, e marcado para a equipe.
+   */
+  const comecarPlanoDaEquipe = useCallback(
+    (equipeId: string, semanaInicio: string) => {
+      const temAlgo = JSON.stringify(plano) !== JSON.stringify(planoVazio())
+      if (
+        temAlgo &&
+        !confirm('Começar o plano da equipe substitui o que está preenchido na página. Continuar?')
+      )
+        return
+      const novo = planoVazio()
+      const curso = EQUIPES.find((e) => e.id === equipeId)?.curso
+      setPlano({
+        ...novo,
+        curso: curso ?? novo.curso,
+        semana: rotuloDaSemana(semanaInicio),
+        semanaInicio,
+        professor: conta?.perfil.nome ?? '',
+        escolas: conta?.perfil.escolas_padrao ?? [],
+      })
+      setPlanoAtualId(null)
+      setEquipeCompartilhada(equipeId)
+      setMostrarPlanosDaEquipe(false)
+    },
+    [plano, conta],
+  )
 
   return (
     <>
@@ -204,6 +255,9 @@ function AppLogado({ sessao }: { sessao: Session }) {
         minhasEquipes={equipesDeCurso}
         equipeCompartilhada={equipeCompartilhada}
         aoMudarEquipeCompartilhada={setEquipeCompartilhada}
+        meuId={sessao.user.id}
+        responsaveis={responsaveis}
+        aoMudarResponsaveis={recarregarResponsaveis}
         aoSalvar={async (dadosAtuais) => {
           const salvo = await salvarPlano(planoAtualId, dadosAtuais, equipeCompartilhada)
           setPlanoAtualId(salvo.id)
@@ -222,12 +276,22 @@ function AppLogado({ sessao }: { sessao: Session }) {
         <PlanosDaEquipe
           minhasEquipes={equipesDeCurso}
           perfil={conta.perfil}
+          responsaveis={responsaveis}
+          aoMudarResponsaveis={recarregarResponsaveis}
+          aoComecarPlano={comecarPlanoDaEquipe}
           aoFechar={() => setMostrarPlanosDaEquipe(false)}
           aoAbrirPlano={abrirPlanoSalvo}
         />
       ) : null}
 
-      {mostrarGestao && conta?.gestao ? <Gestao aoFechar={() => setMostrarGestao(false)} /> : null}
+      {mostrarGestao && conta?.gestao ? (
+        <Gestao
+          meuId={sessao.user.id}
+          responsaveis={responsaveis}
+          aoMudarResponsaveis={recarregarResponsaveis}
+          aoFechar={() => setMostrarGestao(false)}
+        />
+      ) : null}
 
       {conta && !conta.equipes.length && !adiouPerfil ? (
         <CompletarPerfil

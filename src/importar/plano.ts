@@ -1,6 +1,8 @@
 import { CICLOS, CURSOS, DURACOES_DISPONIVEIS, MINUTOS_PADRAO, NUCLEOS, planoVazio } from '../constants'
 import { larguraDoTexto } from '../pdf/ajuste'
 import { CAIXAS, CAIXAS_CABECALHO, TEXTOS, type Caixa } from '../pdf/layout'
+import { linkDoTexto } from '../plano'
+import { semanaPeloTexto } from '../semanas'
 import type { BlocoAtividade, Habilidade, PlanoDeAula } from '../types'
 import type { ConteudoDoPdf, Linha, Marcador } from './linhas'
 
@@ -268,7 +270,13 @@ export function planoDoConteudo(conteudo: ConteudoDoPdf): Importacao {
   }
 
   plano.semana = semRotulo(paragrafo(linhas, CAIXAS_CABECALHO.semana, 1), 'Semana:')
-  plano.professor = semRotulo(paragrafo(linhas, CAIXAS_CABECALHO.professor, 1), 'Prof.:')
+  // Se o texto bate com uma das semanas abertas, a semana já vem escolhida.
+  plano.semanaInicio = semanaPeloTexto(plano.semana)?.inicio ?? ''
+  // "Prof:" desde que o ponto saiu do cabeçalho; "Prof.:" nos PDFs mais antigos.
+  plano.professor = semRotulo(
+    semRotulo(paragrafo(linhas, CAIXAS_CABECALHO.professor, 1), 'Prof.:'),
+    'Prof:',
+  )
   plano.conteudo = semRotulo(paragrafo(linhas, CAIXAS_CABECALHO.conteudo, 1), 'Conteúdo:')
 
   const duracao = semRotulo(paragrafo(linhas, CAIXAS_CABECALHO.duracao, 1), 'Duração:')
@@ -302,7 +310,7 @@ export function planoDoConteudo(conteudo: ConteudoDoPdf): Importacao {
   plano.materiais = lista(conteudo, CAIXAS.materiais, 1, 'materiais')
   plano.objetivos = lista(conteudo, CAIXAS.objetivos, 1, 'objetivos')
   plano.metodologia = lista(conteudo, CAIXAS.metodologia, 2, 'metodologia')
-  plano.recursos = lista(conteudo, CAIXAS.recursos, 3, 'recursos')
+  plano.links = lista(conteudo, CAIXAS.recursos, 3, 'recursos').map(linkDoTexto)
   plano.observacao = paragrafo(linhas, CAIXAS.observacao, 3)
 
   const { habilidades, naoLidas } = lerHabilidades(linhas)
@@ -318,7 +326,7 @@ export function planoDoConteudo(conteudo: ConteudoDoPdf): Importacao {
   // lista some da tela e o professor não tem onde digitar.
   if (!plano.objetivos.length) plano.objetivos = ['']
   if (!plano.metodologia.length) plano.metodologia = ['']
-  if (!plano.recursos.length) plano.recursos = ['']
+  if (!plano.links.length) plano.links = [{ nome: '', link: '' }]
 
   // ── conferências finais ────────────────────────────────────────────────
   const soma = plano.estrutura.reduce((t, b) => t + b.minutos, 0)
@@ -336,6 +344,12 @@ export function planoDoConteudo(conteudo: ConteudoDoPdf): Importacao {
   ].filter(Boolean)
   if (faltando.length) {
     avisos.push(`Não consegui ler: ${faltando.join(', ')}. Preencha à mão depois de importar.`)
+  }
+
+  if (plano.semana && !plano.semanaInicio) {
+    avisos.push(
+      `A semana do PDF (${plano.semana}) não é a atual nem uma das duas próximas — escolha a semana na lista antes de salvar.`,
+    )
   }
 
   avisos.push(

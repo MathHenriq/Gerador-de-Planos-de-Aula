@@ -1,3 +1,4 @@
+import { normalizarPlano } from '../plano'
 import type { PlanoDeAula } from '../types'
 import { supabase } from './client'
 
@@ -9,6 +10,8 @@ export interface PlanoSalvo {
   atualizado_em: string
   /** Equipe com quem o plano foi compartilhado; `null` = só o autor vê. */
   equipe_id: string | null
+  /** Segunda-feira da semana (`AAAA-MM-DD`); `null` em plano antigo. */
+  semana_inicio: string | null
 }
 
 /**
@@ -21,12 +24,32 @@ export interface PlanoDaEquipe extends PlanoSalvo {
   autor_email: string | null
 }
 
-const COLUNAS = 'id, dados, criado_em, atualizado_em, equipe_id'
+const COLUNAS = 'id, dados, criado_em, atualizado_em, equipe_id, semana_inicio'
 const COLUNAS_VISAO = `${COLUNAS}, professor_id, autor_nome, autor_email`
 
 function exigirSupabase() {
   if (!supabase) throw new Error('Login indisponível: o app não tem as chaves do Supabase configuradas.')
   return supabase
+}
+
+/**
+ * Todo plano que sai do banco passa por aqui: plano salvo antes de um campo
+ * existir (ou antes de "Recursos" virar "Links") chega no formato atual.
+ */
+function normalizar<T extends PlanoSalvo>(linha: T): T {
+  return { ...linha, dados: normalizarPlano(linha.dados) }
+}
+
+/**
+ * Erro do banco em português. As regras da semana já vêm com mensagem pronta
+ * (trigger `conferir_plano_da_semana`); o índice único é a rede de segurança
+ * para dois salvamentos simultâneos.
+ */
+function erroLegivel(error: { code?: string; message: string }): Error {
+  if (error.code === '23505') {
+    return new Error('A equipe já tem um plano para esta semana. Abra e altere esse, em vez de criar outro.')
+  }
+  return new Error(error.message)
 }
 
 async function meuId(): Promise<string> {
@@ -45,7 +68,7 @@ export async function listarPlanos(): Promise<PlanoSalvo[]> {
     .order('atualizado_em', { ascending: false })
 
   if (error) throw error
-  return data
+  return data.map(normalizar)
 }
 
 /**
@@ -60,32 +83,33 @@ export async function salvarPlano(
   equipeId: string | null = null,
 ): Promise<PlanoSalvo> {
   const cliente = exigirSupabase()
+  const semana_inicio = dados.semanaInicio || null
 
   if (id) {
     const { data, error } = await cliente
       .from('planos')
-      .update({ dados, equipe_id: equipeId })
+      .update({ dados, equipe_id: equipeId, semana_inicio })
       .eq('id', id)
       .select(COLUNAS)
       .single()
-    if (error) throw error
-    return data
+    if (error) throw erroLegivel(error)
+    return normalizar(data)
   }
 
   const { data, error } = await cliente
     .from('planos')
-    .insert({ dados, professor_id: await meuId(), equipe_id: equipeId })
+    .insert({ dados, professor_id: await meuId(), equipe_id: equipeId, semana_inicio })
     .select(COLUNAS)
     .single()
-  if (error) throw error
-  return data
+  if (error) throw erroLegivel(error)
+  return normalizar(data)
 }
 
 /** Muda só o compartilhamento, sem tocar no conteúdo do plano. */
 export async function compartilharPlano(id: string, equipeId: string | null): Promise<void> {
   const cliente = exigirSupabase()
   const { error } = await cliente.from('planos').update({ equipe_id: equipeId }).eq('id', id)
-  if (error) throw error
+  if (error) throw erroLegivel(error)
 }
 
 export async function excluirPlano(id: string): Promise<void> {
@@ -114,7 +138,7 @@ export async function listarPlanosDaEquipe(): Promise<PlanoDaEquipe[]> {
     .order('atualizado_em', { ascending: false })
 
   if (error) throw error
-  return data
+  return data.map(normalizar)
 }
 
 /**
@@ -141,12 +165,13 @@ export async function copiarPlanoParaMim(
       dados,
       professor_id: await meuId(),
       equipe_id: null,
+      semana_inicio: dados.semanaInicio || null,
       copiado_de: original.id,
     })
     .select(COLUNAS)
     .single()
-  if (error) throw error
-  return data
+  if (error) throw erroLegivel(error)
+  return normalizar(data)
 }
 
 /**
@@ -161,5 +186,5 @@ export async function listarTodosOsPlanos(): Promise<PlanoDaEquipe[]> {
     .order('atualizado_em', { ascending: false })
 
   if (error) throw error
-  return data
+  return data.map(normalizar)
 }

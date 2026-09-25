@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { nomeDaEquipe } from '../constants'
 import { atualizarMeuPerfil, type Perfil } from '../supabase/equipes'
+import { nomeDoResponsavel, type ResponsavelDaSemana } from '../supabase/semanas'
 import {
   copiarPlanoParaMim,
   listarPlanosDaEquipe,
@@ -9,6 +10,7 @@ import {
   type PlanoSalvo,
 } from '../supabase/planos'
 import { SeletorDeEscolas } from './SeletorDeEscolas'
+import { SemanasDaEquipe } from './SemanasDaEquipe'
 import { Aviso, Campo } from './ui'
 
 function dataFormatada(iso: string): string {
@@ -38,11 +40,19 @@ function autoria(plano: PlanoDaEquipe, meuId: string): string {
 export function PlanosDaEquipe({
   minhasEquipes,
   perfil,
+  responsaveis,
+  aoMudarResponsaveis,
+  aoComecarPlano,
   aoFechar,
   aoAbrirPlano,
 }: {
   minhasEquipes: string[]
   perfil: Perfil
+  /** Quem assumiu cada semana nas minhas equipes (ver `SemanasDaEquipe`). */
+  responsaveis: ResponsavelDaSemana[]
+  aoMudarResponsaveis: () => void
+  /** Abre no formulário um plano novo da equipe para a semana assumida. */
+  aoComecarPlano: (equipeId: string, semanaInicio: string) => void
   aoFechar: () => void
   aoAbrirPlano: (plano: PlanoSalvo) => void
 }) {
@@ -61,6 +71,12 @@ export function PlanosDaEquipe({
         setErro(e instanceof Error ? e.message : 'Não consegui carregar os planos da equipe.'),
       )
   }, [])
+
+  const responsavelDoAberto = aberto
+    ? responsaveis.find(
+        (r) => r.equipe_id === aberto.equipe_id && r.semana_inicio === aberto.semana_inicio,
+      )
+    : undefined
 
   const visiveis = useMemo(
     () => (planos ?? []).filter((p) => filtro === 'todas' || p.equipe_id === filtro),
@@ -152,6 +168,13 @@ export function PlanosDaEquipe({
               </div>
             ) : (
               <div className="cartao-copia">
+                {responsavelDoAberto ? (
+                  <Aviso tipo="info">
+                    Este é o plano da equipe para a semana, e o responsável é{' '}
+                    <strong>{nomeDoResponsavel(responsavelDoAberto)}</strong>. Só essa pessoa altera
+                    o plano — correções e sugestões, combine com ela.
+                  </Aviso>
+                ) : null}
                 <h3>Fazer uma cópia para mim</h3>
                 <p className="explica">
                   A cópia entra na sua conta com todo o conteúdo do plano — trocando só o professor e
@@ -159,7 +182,7 @@ export function PlanosDaEquipe({
                   quiser.
                 </p>
 
-                <Campo rotulo="Prof." dica="sai no cabeçalho do PDF">
+                <Campo rotulo="Prof" dica="sai no cabeçalho do PDF">
                   <input
                     type="text"
                     value={nome}
@@ -191,6 +214,32 @@ export function PlanosDaEquipe({
           </div>
         ) : (
           <>
+            {minhasEquipes.length ? (
+              <section className="secao-semanas">
+                <h3>Quem faz o plano de cada semana</h3>
+                <p className="explica">
+                  Cada equipe faz <strong>um</strong> plano por semana. Um professor assume a
+                  semana e só ele cria e altera o plano; os outros acompanham por aqui e combinam
+                  as correções com ele. Dá para assumir a semana atual e as duas seguintes.
+                </p>
+                <SemanasDaEquipe
+                  equipes={minhasEquipes}
+                  responsaveis={responsaveis}
+                  planos={planos ?? []}
+                  meuId={perfil.id}
+                  aoMudarResponsaveis={aoMudarResponsaveis}
+                  aoComecarPlano={aoComecarPlano}
+                  aoAbrirMeuPlano={aoAbrirPlano}
+                  aoVerPlano={(p) => {
+                    setAberto(p)
+                    setNome(perfil.nome)
+                    setEscolas(perfil.escolas_padrao)
+                  }}
+                />
+              </section>
+            ) : null}
+
+            <h3 className="titulo-lista-planos">Planos compartilhados</h3>
             {minhasEquipes.length > 1 ? (
               <div className="filtro-equipes">
                 <button

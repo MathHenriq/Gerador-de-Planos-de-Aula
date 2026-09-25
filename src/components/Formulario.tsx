@@ -10,13 +10,24 @@ import {
 import { nomeDoArquivo } from '../nomeDoDocumento'
 import { diagnosticar } from '../pdf/diagnostico'
 import { fechaNoTempoDaAula, somaDosBlocos } from '../plano'
+import { rotuloDaSemana, semanaPermitida, semanasPermitidas } from '../semanas'
+import {
+  assumirSemana,
+  liberarSemana,
+  nomeDoResponsavel,
+  type ResponsavelDaSemana,
+} from '../supabase/semanas'
 import type { PlanoDeAula } from '../types'
 import { CampoHabilidades } from './CampoHabilidades'
 import { EditorEstrutura } from './EditorEstrutura'
+import { EditorLinks } from './EditorLinks'
 import { ListaEditavel } from './ListaEditavel'
 import { baixarPdf, PreviaPdf } from './PreviaPdf'
 import { SeletorDeEscolas } from './SeletorDeEscolas'
-import { Aviso, Campo, Secao } from './ui'
+import { confirmacaoDeResponsavel } from './SemanasDaEquipe'
+import { Aviso, Campo, Dica, Secao } from './ui'
+
+const QUANDO = ['esta semana', 'próxima', 'daqui a 2 semanas']
 
 /**
  * Tela única do gerador: o professor preenche, confere na prévia ao lado e
@@ -32,6 +43,9 @@ export function Formulario({
   equipeCompartilhada = null,
   aoMudarEquipeCompartilhada,
   contaCarregada = false,
+  meuId = '',
+  responsaveis = [],
+  aoMudarResponsaveis,
 }: {
   plano: PlanoDeAula
   aoMudar: (mudanca: Partial<PlanoDeAula>) => void
@@ -47,16 +61,81 @@ export function Formulario({
   aoMudarEquipeCompartilhada?: (equipeId: string | null) => void
   /** O perfil e as equipes do professor já vieram do banco? */
   contaCarregada?: boolean
+  meuId?: string
+  /** Quem assumiu cada semana aberta nas minhas equipes — o "plano mestre". */
+  responsaveis?: ResponsavelDaSemana[]
+  aoMudarResponsaveis?: () => void
 }) {
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [erroSalvar, setErroSalvar] = useState('')
   const [salvoAgora, setSalvoAgora] = useState(false)
+  const [assumindo, setAssumindo] = useState(false)
 
   const faltando = camposObrigatoriosFaltando(plano)
   const tempoOk = fechaNoTempoDaAula(plano.estrutura, plano.minutos)
   const { apertadas, estouradas } = diagnosticar(plano)
+
+  const semanas = semanasPermitidas()
+  const semanaNaJanela = semanaPermitida(plano.semanaInicio)
+  const responsavelDe = (equipeId: string | null, inicio: string) =>
+    equipeId
+      ? responsaveis.find((r) => r.equipe_id === equipeId && r.semana_inicio === inicio)
+      : undefined
+  const responsavel = responsavelDe(equipeCompartilhada, plano.semanaInicio)
+  const souResponsavel = !!responsavel && responsavel.professor_id === meuId
+
+  // O plano da equipe só é salvo pelo responsável da semana — o banco barra
+  // de qualquer jeito, mas aqui o botão já explica em vez de falhar.
+  const bloqueioEquipe: string | null = !equipeCompartilhada
+    ? null
+    : !plano.semanaInicio
+      ? 'Escolha a semana no cabeçalho para salvar o plano da equipe.'
+      : !semanaNaJanela
+        ? 'Plano da equipe só pode ser criado ou alterado na semana atual e nas duas próximas.'
+        : !responsavel
+          ? 'Confirme que você é o responsável por esta semana para salvar o plano da equipe.'
+          : !souResponsavel
+            ? `O responsável por esta semana é ${nomeDoResponsavel(responsavel)}.`
+            : null
+
+  function rotuloDaOpcao(inicio: string, rotulo: string, i: number): string {
+    const r = responsavelDe(equipeCompartilhada, inicio)
+    const dono = !r ? '' : r.professor_id === meuId ? ' · você é o responsável' : ` · com ${nomeDoResponsavel(r)}`
+    return `${rotulo} (${QUANDO[i]})${dono}`
+  }
+
+  async function assumir() {
+    if (!equipeCompartilhada || !plano.semanaInicio) return
+    if (!confirm(confirmacaoDeResponsavel(equipeCompartilhada, rotuloDaSemana(plano.semanaInicio))))
+      return
+    setAssumindo(true)
+    setErroSalvar('')
+    try {
+      await assumirSemana(equipeCompartilhada, plano.semanaInicio)
+    } catch (e) {
+      setErroSalvar(e instanceof Error ? e.message : 'Não consegui assumir a semana.')
+    } finally {
+      setAssumindo(false)
+      aoMudarResponsaveis?.()
+    }
+  }
+
+  async function largar() {
+    if (!equipeCompartilhada || !plano.semanaInicio) return
+    if (!confirm('Largar esta semana? Outro professor da equipe poderá assumir.')) return
+    setAssumindo(true)
+    setErroSalvar('')
+    try {
+      await liberarSemana(equipeCompartilhada, plano.semanaInicio)
+    } catch (e) {
+      setErroSalvar(e instanceof Error ? e.message : 'Não consegui largar a semana.')
+    } finally {
+      setAssumindo(false)
+      aoMudarResponsaveis?.()
+    }
+  }
 
   // Uma edição depois de salvar torna o "Plano salvo" desatualizado.
   useEffect(() => setSalvoAgora(false), [plano])
@@ -118,14 +197,34 @@ export function Formulario({
                   ))}
                 </select>
               </Campo>
-              <Campo rotulo="Semana" dica="ex.: 31/08 - 04/09">
-                <input
-                  type="text"
-                  value={plano.semana}
-                  onChange={(e) => aoMudar({ semana: e.target.value })}
-                />
+              <Campo rotulo="Semana" dica="a atual ou as duas próximas">
+                <select
+                  value={plano.semanaInicio || (plano.semana ? 'antiga' : '')}
+                  onChange={(e) =>
+                    aoMudar({
+                      semanaInicio: e.target.value,
+                      semana: rotuloDaSemana(e.target.value),
+                    })
+                  }
+                >
+                  <option value="" disabled>
+                    Escolha a semana
+                  </option>
+                  {/* Plano antigo ou importado: a semana dele continua aparecendo,
+                      mas não dá para escolhê-la de novo. */}
+                  {plano.semana && !semanaNaJanela ? (
+                    <option value={plano.semanaInicio || 'antiga'} disabled>
+                      {plano.semana} (fora do prazo)
+                    </option>
+                  ) : null}
+                  {semanas.map((s, i) => (
+                    <option value={s.inicio} key={s.inicio}>
+                      {rotuloDaOpcao(s.inicio, s.rotulo, i)}
+                    </option>
+                  ))}
+                </select>
               </Campo>
-              <Campo rotulo="Prof.">
+              <Campo rotulo="Prof">
                 <input
                   type="text"
                   value={plano.professor}
@@ -185,6 +284,11 @@ export function Formulario({
           </Secao>
 
           <Secao titulo="Materiais necessários">
+            <Dica>
+              Aqui vão os equipamentos: computador, tablet, celular, fones, mouse e teclado.
+              Sites e plataformas (Canva, VSCode…) vão em <strong>Links necessários</strong>, no
+              fim do plano.
+            </Dica>
             <ListaEditavel
               itens={plano.materiais.length ? plano.materiais : ['']}
               aoMudar={(materiais) => aoMudar({ materiais })}
@@ -197,7 +301,7 @@ export function Formulario({
 
           <Secao
             titulo="Objetivos de aprendizagem"
-            explica="Um objetivo por item. Aparecem como lista com marcadores."
+            explica="Um objetivo por item — cada um sai com a sua bolinha no PDF."
           >
             <ListaEditavel
               itens={plano.objetivos}
@@ -205,6 +309,7 @@ export function Formulario({
               placeholder="Ex.: Compreender os conceitos básicos de front-end…"
               rotuloAdicionar="Adicionar objetivo"
               descricaoDoItem="objetivo"
+              comMarcador
             />
           </Secao>
 
@@ -219,12 +324,18 @@ export function Formulario({
           </Secao>
 
           <Secao titulo="Metodologia" explica="Página 2 do PDF.">
+            <Dica>
+              A metodologia é um <strong>texto corrido e estruturado</strong> que explica como a
+              aula acontece — como você apresenta o tema, como a turma trabalha, como fecha a aula
+              e por quê. Não é uma lista de tópicos: escreva frases completas, em parágrafos.
+            </Dica>
             <ListaEditavel
               itens={plano.metodologia}
               aoMudar={(metodologia) => aoMudar({ metodologia })}
-              placeholder="Como a aula é conduzida"
-              rotuloAdicionar="Adicionar passo"
-              descricaoDoItem="passo"
+              placeholder="Ex.: A aula começa retomando o que a turma produziu na semana anterior, para… Em seguida, …"
+              rotuloAdicionar="Adicionar parágrafo"
+              descricaoDoItem="parágrafo"
+              linhas={4}
             />
           </Secao>
 
@@ -236,6 +347,11 @@ export function Formulario({
               </span>
             }
           >
+            <Dica>
+              Descreva cada etapa com detalhe: o que o professor faz, o que os alunos fazem, qual
+              é a atividade, as regras e o que se espera que a turma entregue. Quem ler o plano
+              tem que conseguir dar a aula só com ele.
+            </Dica>
             <EditorEstrutura
               blocos={plano.estrutura}
               minutosTotais={plano.minutos}
@@ -243,15 +359,13 @@ export function Formulario({
             />
           </Secao>
 
-          <Secao titulo="Recursos necessários" explica="Ferramentas e plataformas, página 3.">
-            <ListaEditavel
-              itens={plano.recursos}
-              aoMudar={(recursos) => aoMudar({ recursos })}
-              placeholder="Ex.: VSCode"
-              rotuloAdicionar="Adicionar recurso"
-              descricaoDoItem="recurso"
-              linhas={1}
-            />
+          <Secao titulo="Links necessários" explica="Sites e plataformas usados na aula, página 3.">
+            <Dica>
+              Só sites e plataformas, com o nome e o link (ex.: Canva —
+              https://www.canva.com). Tablet, computador e outros dispositivos
+              não entram aqui: eles vão em <strong>Materiais necessários</strong>.
+            </Dica>
+            <EditorLinks links={plano.links} aoMudar={(links) => aoMudar({ links })} />
           </Secao>
 
           <Secao titulo="Observação" explica="Campo livre, opcional — fecha a página 3.">
@@ -336,10 +450,54 @@ export function Formulario({
                 </select>
               </Campo>
               <p className="explica">
-                Compartilhado, o plano aparece em “Planos da equipe” para os colegas, que podem
-                fazer uma cópia com o nome e os núcleos deles. O seu original continua sendo só
-                seu — a cópia é um plano à parte.
+                Compartilhado, este vira o plano da equipe para a semana — um só por equipe. Os
+                colegas o veem em “Planos da equipe” e fazem uma cópia com o nome e os núcleos
+                deles; a cópia é um plano à parte.
               </p>
+
+              {equipeCompartilhada && plano.semanaInicio && semanaNaJanela ? (
+                !responsavel ? (
+                  <div className="responsavel-semana">
+                    <p>
+                      Ninguém assumiu a semana <strong>{plano.semana}</strong> da equipe{' '}
+                      {nomeDaEquipe(equipeCompartilhada)} ainda.
+                    </p>
+                    <button
+                      type="button"
+                      className="botao"
+                      onClick={assumir}
+                      disabled={assumindo}
+                    >
+                      {assumindo ? 'Assumindo…' : 'Sou o professor responsável por esta semana'}
+                    </button>
+                  </div>
+                ) : souResponsavel ? (
+                  <Aviso tipo="info">
+                    Você é o responsável pelo plano da semana {plano.semana} da equipe{' '}
+                    {nomeDaEquipe(equipeCompartilhada)}. Os colegas acompanham, mas só você altera.
+                    {!planoSalvoId ? (
+                      <>
+                        {' '}
+                        <button
+                          type="button"
+                          className="botao discreto"
+                          onClick={largar}
+                          disabled={assumindo}
+                        >
+                          Largar a semana
+                        </button>
+                      </>
+                    ) : null}
+                  </Aviso>
+                ) : (
+                  <Aviso tipo="atencao">
+                    <strong>{nomeDoResponsavel(responsavel)}</strong> é o responsável pelo plano
+                    da semana {plano.semana} da equipe {nomeDaEquipe(equipeCompartilhada)} — só
+                    essa pessoa cria e altera esse plano. Para mudar algo, converse com o grupo.
+                    Quando o plano estiver salvo, faça a sua cópia em “Planos da equipe”.
+                  </Aviso>
+                )
+              ) : null}
             </div>
           ) : null}
 
@@ -348,11 +506,19 @@ export function Formulario({
               {baixando ? 'Gerando…' : 'Baixar PDF'}
             </button>
             {aoSalvar ? (
-              <button type="button" className="botao secundario" onClick={salvar} disabled={salvando}>
+              <button
+                type="button"
+                className="botao secundario"
+                onClick={salvar}
+                disabled={salvando || !!bloqueioEquipe}
+                title={bloqueioEquipe ?? undefined}
+              >
                 {salvando ? 'Salvando…' : planoSalvoId ? 'Atualizar plano salvo' : 'Salvar na minha conta'}
               </button>
             ) : null}
           </div>
+
+          {aoSalvar && bloqueioEquipe ? <p className="dica">{bloqueioEquipe}</p> : null}
 
           <p className="nome-arquivo" title={nomeDoArquivo(plano)}>
             Sai como <strong>{nomeDoArquivo(plano)}</strong>

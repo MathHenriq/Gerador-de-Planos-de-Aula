@@ -1,4 +1,11 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import {
+  useLayoutEffect,
+  useRef,
+  type ClipboardEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from 'react'
 
 export function Campo({
   rotulo,
@@ -30,6 +37,18 @@ export function Aviso({
   return (
     <div className={`aviso ${tipo}`} role={tipo === 'erro' ? 'alert' : undefined}>
       {children}
+    </div>
+  )
+}
+
+/**
+ * Lembrete de preenchimento, dentro da seção: o que a coordenação espera
+ * daquele campo. Mais visível que o `explica`, porque é o erro que se repete.
+ */
+export function Dica({ children }: { children: ReactNode }) {
+  return (
+    <div className="dica-secao">
+      <strong>Dica:</strong> {children}
     </div>
   )
 }
@@ -116,6 +135,9 @@ export function TextoMultilinha({
   placeholder,
   linhas = 2,
   rotulo,
+  campoRef,
+  aoTeclar,
+  aoColar,
 }: {
   valor: string
   aoMudar: (v: string) => void
@@ -123,8 +145,12 @@ export function TextoMultilinha({
   linhas?: number
   /** Rótulo para leitor de tela, quando o campo não tem `<label>` próprio. */
   rotulo?: string
+  /** Para quem precisa pôr o cursor no campo (ex.: o item novo criado pelo Enter). */
+  campoRef?: Ref<HTMLTextAreaElement>
+  aoTeclar?: (e: KeyboardEvent<HTMLTextAreaElement>) => void
+  aoColar?: (e: ClipboardEvent<HTMLTextAreaElement>) => void
 }) {
-  const campo = useRef<HTMLTextAreaElement>(null)
+  const campo = useRef<HTMLTextAreaElement | null>(null)
 
   useLayoutEffect(() => {
     const el = campo.current
@@ -135,12 +161,18 @@ export function TextoMultilinha({
 
   return (
     <textarea
-      ref={campo}
+      ref={(el) => {
+        campo.current = el
+        if (typeof campoRef === 'function') campoRef(el)
+        else if (campoRef) (campoRef as { current: HTMLTextAreaElement | null }).current = el
+      }}
       rows={linhas}
       value={valor}
       placeholder={placeholder}
       aria-label={rotulo}
       onChange={(e) => aoMudar(e.target.value)}
+      onKeyDown={aoTeclar}
+      onPaste={aoColar}
     />
   )
 }

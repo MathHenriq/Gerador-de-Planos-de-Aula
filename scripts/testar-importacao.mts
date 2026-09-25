@@ -89,7 +89,8 @@ conferirLista('escolas', p.escolas, lido.escolas)
 conferirLista('materiais', p.materiais, lido.materiais)
 conferirLista('objetivos', p.objetivos, lido.objetivos)
 conferirLista('metodologia', p.metodologia, lido.metodologia)
-conferirLista('recursos', p.recursos, lido.recursos)
+conferirLista('links (nome)', p.links.map((l) => l.nome), lido.links.map((l) => l.nome))
+conferirLista('links (endereço)', p.links.map((l) => l.link), lido.links.map((l) => l.link))
 
 conferirLista(
   'habilidades (código)',

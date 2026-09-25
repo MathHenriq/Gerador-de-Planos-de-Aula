@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { EQUIPES, nomeDaEquipe } from '../constants'
+import { EQUIPES, EQUIPES_DE_CURSO, nomeDaEquipe } from '../constants'
 import {
   adicionarNaEquipe,
   listarProfessores,
@@ -8,10 +8,12 @@ import {
   type ProfessorDaGestao,
 } from '../supabase/equipes'
 import { listarTodosOsPlanos, type PlanoDaEquipe } from '../supabase/planos'
+import type { ResponsavelDaSemana } from '../supabase/semanas'
 import { ExportarPlanos } from './ExportarPlanos'
+import { SemanasDaEquipe } from './SemanasDaEquipe'
 import { Aviso } from './ui'
 
-type Aba = 'professores' | 'planos' | 'exportar'
+type Aba = 'professores' | 'semanas' | 'planos' | 'exportar'
 
 function dataFormatada(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -27,7 +29,18 @@ function dataFormatada(iso: string): string {
  * A tela só aparece para quem está na equipe Gestão, mas quem garante isso é
  * a RLS do banco — se alguém chamar as funções por fora, o Supabase recusa.
  */
-export function Gestao({ aoFechar }: { aoFechar: () => void }) {
+export function Gestao({
+  meuId,
+  responsaveis,
+  aoMudarResponsaveis,
+  aoFechar,
+}: {
+  meuId: string
+  /** Responsáveis de todas as equipes nas semanas abertas — a Gestão vê todos. */
+  responsaveis: ResponsavelDaSemana[]
+  aoMudarResponsaveis: () => void
+  aoFechar: () => void
+}) {
   const [aba, setAba] = useState<Aba>('professores')
   const [professores, setProfessores] = useState<ProfessorDaGestao[] | null>(null)
   const [planos, setPlanos] = useState<PlanoDaEquipe[] | null>(null)
@@ -45,7 +58,7 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
   }, [])
 
   useEffect(() => {
-    if ((aba !== 'planos' && aba !== 'exportar') || planos) return
+    if (aba === 'professores' || planos) return
     listarTodosOsPlanos()
       .then(setPlanos)
       .catch((e) => setErro(e instanceof Error ? e.message : 'Não consegui carregar os planos.'))
@@ -104,6 +117,13 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
             onClick={() => setAba('professores')}
           >
             Professores e equipes
+          </button>
+          <button
+            type="button"
+            className={aba === 'semanas' ? 'ativa' : ''}
+            onClick={() => setAba('semanas')}
+          >
+            Semanas
           </button>
           <button
             type="button"
@@ -177,6 +197,21 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
           )
         ) : !planos ? (
           <p className="explica">Carregando…</p>
+        ) : aba === 'semanas' ? (
+          <>
+            <p className="explica">
+              Quem assumiu o plano de cada equipe na semana atual e nas duas próximas. Se um
+              professor assumiu e não vai fazer, destrave a semana para outro assumir.
+            </p>
+            <SemanasDaEquipe
+              equipes={EQUIPES_DE_CURSO.map((e) => e.id)}
+              responsaveis={responsaveis}
+              planos={planos.filter((p) => p.equipe_id)}
+              meuId={meuId}
+              gestao
+              aoMudarResponsaveis={aoMudarResponsaveis}
+            />
+          </>
         ) : aba === 'exportar' ? (
           <ExportarPlanos planos={planos} />
         ) : (
@@ -211,7 +246,7 @@ export function Gestao({ aoFechar }: { aoFechar: () => void }) {
                   </div>
                   {planoAberto === p.id ? (
                     <dl className="resumo-plano">
-                      <dt>Prof.</dt>
+                      <dt>Prof</dt>
                       <dd>{p.dados.professor || '—'}</dd>
                       <dt>Ciclo</dt>
                       <dd>{p.dados.ciclo || '—'}</dd>

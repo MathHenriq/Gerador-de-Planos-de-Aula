@@ -1,4 +1,5 @@
 import { textoDasEscolas } from '../constants'
+import { textoDoLink } from '../plano'
 import type { PlanoDeAula } from '../types'
 import { alturaEstimada, escalaParaCaber, type MedidaCaixa, type Paragrafo } from './ajuste'
 import { CAIXAS, HABILIDADES_ESPACO, TEXTOS, alturaDisponivel } from './layout'
@@ -56,7 +57,7 @@ export function diagnosticar(plano: PlanoDeAula): Diagnostico {
       chave: 'estrutura',
       itens: plano.estrutura.flatMap((b) => [`${b.titulo} – ${b.minutos} MIN`, ...b.itens]),
     },
-    { nome: 'recursos', chave: 'recursos', itens: plano.recursos },
+    { nome: 'links', chave: 'recursos', itens: plano.links.map(textoDoLink) },
     { nome: 'observação', chave: 'observacao', itens: [plano.observacao], maiuscula: false },
   ]
 

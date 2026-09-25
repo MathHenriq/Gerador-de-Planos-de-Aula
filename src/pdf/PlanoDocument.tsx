@@ -1,10 +1,11 @@
-import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Image, Link, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import type { Style } from '@react-pdf/types'
 import type { ReactNode } from 'react'
 
 import { formatarDuracao, textoDasEscolas } from '../constants'
 import { nomePadronizado } from '../nomeDoDocumento'
-import type { BlocoAtividade, Habilidade, PlanoDeAula } from '../types'
+import { textoDoLink } from '../plano'
+import type { BlocoAtividade, Habilidade, LinkNecessario, PlanoDeAula } from '../types'
 import { escalaParaCaber, estimarLinhas, type Paragrafo } from './ajuste'
 import { FAMILIA } from './fontes'
 import {
@@ -162,7 +163,7 @@ function ItemComMarcador({
   alinhamento,
   maiuscula,
 }: {
-  texto: string
+  texto: ReactNode
   padMarcador: number
   padLeft: number
   padRight: number
@@ -190,7 +191,7 @@ function ItemComMarcador({
   )
 }
 
-/** Lista com marcadores (Objetivos, Materiais, Metodologia, Recursos). */
+/** Lista com marcadores (Objetivos, Materiais, Metodologia). */
 function CaixaLista({ caixa, texto, itens, maiuscula }: ConteudoProps & { itens: string[] }) {
   const visiveis = itens.map((i) => i.trim()).filter(Boolean)
   const escala = escalaParaCaber(
@@ -229,6 +230,68 @@ function CaixaLista({ caixa, texto, itens, maiuscula }: ConteudoProps & { itens:
       </View>
     </RecorteDaCaixa>
   )
+}
+
+/**
+ * Links necessários: o nome da plataforma em caixa alta, como o resto do
+ * template, e o endereço como foi digitado — em maiúsculas ele deixaria de
+ * funcionar para quem copia do PDF. O endereço sai clicável.
+ */
+function CaixaLinks({ caixa, texto, links }: ConteudoProps & { links: LinkNecessario[] }) {
+  const visiveis = links
+    .map((l) => ({ nome: l.nome.trim(), link: l.link.trim() }))
+    .filter((l) => l.nome || l.link)
+  // Mede tudo em caixa alta: é a hipótese mais larga, então nunca falta espaço.
+  const escala = escalaParaCaber(
+    visiveis.map((l) => ({ texto: textoDoLink(l), recuo: 0 })),
+    {
+      larguraUtil: larguraUtil(caixa, texto),
+      fonte: texto.fonte,
+      entrelinha: texto.entrelinha,
+      maiuscula: true,
+    },
+    alturaDisponivel(caixa, texto),
+  )
+
+  const fonte = texto.fonte * escala
+  const entrelinha = texto.entrelinha * escala
+  const padMarcador = texto.padMarcador ?? texto.padLeft / 2
+
+  return (
+    <RecorteDaCaixa caixa={caixa}>
+      <View
+        style={{ position: 'absolute', top: pt(texto.padTop), left: 0, width: pt(caixa.largura) }}
+      >
+        {visiveis.map(({ nome, link }, i) => (
+          <ItemComMarcador
+            key={i}
+            texto={
+              <>
+                {nome.toLocaleUpperCase('pt-BR')}
+                {nome && link ? ': ' : ''}
+                {link ? (
+                  <Link src={endereco(link)} style={{ color: '#000000', textDecoration: 'none' }}>
+                    {link}
+                  </Link>
+                ) : null}
+              </>
+            }
+            padMarcador={padMarcador}
+            padLeft={texto.padLeft}
+            padRight={texto.padRight}
+            fonte={fonte}
+            entrelinha={entrelinha}
+            alinhamento={texto.alinhamento}
+          />
+        ))}
+      </View>
+    </RecorteDaCaixa>
+  )
+}
+
+/** "canva.com" também vira link: sem protocolo, o leitor de PDF não abre. */
+function endereco(link: string): string {
+  return /^[a-z][a-z0-9+.-]*:/i.test(link) ? link : `https://${link}`
 }
 
 /** Habilidades da BNCC: código em negrito + descrição oficial, no mesmo parágrafo. */
@@ -499,7 +562,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
         <CampoCabecalho
           caixa={CAIXAS_CABECALHO.professor}
           {...TEXTO_CABECALHO.professor}
-          rotulo="Prof.: "
+          rotulo="Prof: "
           valor={plano.professor}
         />
         <CampoCabecalho
@@ -595,18 +658,13 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
         <CaixaEstrutura caixa={CAIXAS.estrutura} texto={TEXTOS.estrutura} blocos={plano.estrutura} />
       </Page>
 
-      {/* Página 3 — recursos necessários e observação */}
+      {/* Página 3 — links necessários e observação */}
       <Page size={PAGINA_PT} style={s.pagina}>
         <Marca assets={assets} />
 
-        <RotuloSecao rotulo={ROTULOS.recursos}>Recursos necessários</RotuloSecao>
+        <RotuloSecao rotulo={ROTULOS.recursos}>Links necessários</RotuloSecao>
         <Moldura caixa={CAIXAS.recursos} />
-        <CaixaLista
-          caixa={CAIXAS.recursos}
-          texto={TEXTOS.recursos}
-          itens={plano.recursos}
-          maiuscula
-        />
+        <CaixaLinks caixa={CAIXAS.recursos} texto={TEXTOS.recursos} links={plano.links} />
 
         <RotuloSecao rotulo={ROTULOS.observacao}>Observação</RotuloSecao>
         <Moldura caixa={CAIXAS.observacao} />

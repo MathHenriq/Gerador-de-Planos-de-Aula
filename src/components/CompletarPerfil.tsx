@@ -73,7 +73,7 @@ export function CompletarPerfil({
           Google ou por senha, tanto faz: com o mesmo e-mail é a mesma conta).
         </Aviso>
 
-        <Campo rotulo="Nome e sobrenome" dica="é o que sai no campo Prof. do plano">
+        <Campo rotulo="Nome e sobrenome" dica="é o que sai no campo Prof do plano">
           <input
             type="text"
             value={nome}

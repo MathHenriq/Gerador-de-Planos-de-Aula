@@ -161,7 +161,7 @@ export function Auth() {
           </Campo>
 
           {modo === 'cadastrar' ? (
-            <Campo rotulo="Nome e sobrenome" dica="é o que sai no campo Prof. do plano">
+            <Campo rotulo="Nome e sobrenome" dica="é o que sai no campo Prof do plano">
               <input
                 type="text"
                 required

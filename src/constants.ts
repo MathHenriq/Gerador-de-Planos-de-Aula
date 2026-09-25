@@ -134,6 +134,7 @@ export function planoVazio(): PlanoDeAula {
     curso: CURSOS[1],
     ciclo: 'Sênior',
     semana: '',
+    semanaInicio: '',
     conteudo: '',
     professor: '',
     minutos: MINUTOS_PADRAO,
@@ -150,7 +151,7 @@ export function planoVazio(): PlanoDeAula {
       { titulo: 'Atividade prática', minutos: 50, itens: [''] },
       { titulo: 'Finalização da aula', minutos: 10, itens: [''] },
     ],
-    recursos: [''],
+    links: [{ nome: '', link: '' }],
     observacao: '',
   }
 }

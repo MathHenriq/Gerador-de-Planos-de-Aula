@@ -9,6 +9,7 @@ export const planoDeAmostra: PlanoDeAula = {
   curso: 'Inteligência Artificial',
   ciclo: 'Sênior',
   semana: '31/08 - 04/09',
+  semanaInicio: '2026-08-31',
   conteudo: 'Criação do Front-End do projeto',
   professor: 'Matheus H.',
   minutos: 90,
@@ -98,7 +99,11 @@ export const planoDeAmostra: PlanoDeAula = {
     },
   ],
 
-  recursos: ['Canva', 'Globe', 'VSCode'],
+  links: [
+    { nome: 'Canva', link: 'https://www.canva.com' },
+    { nome: 'Globe', link: '' },
+    { nome: 'VSCode', link: 'https://code.visualstudio.com' },
+  ],
 
   observacao:
     'Duas equipes chegaram atrasadas por causa do transporte — combinado reforçar com a coordenação para a próxima semana.',

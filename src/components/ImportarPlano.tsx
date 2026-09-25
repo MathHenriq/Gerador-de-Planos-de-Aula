@@ -85,7 +85,7 @@ export function ImportarPlano({
                 <dd>{plano.ciclo || '—'}</dd>
                 <dt>Semana</dt>
                 <dd>{plano.semana || '—'}</dd>
-                <dt>Prof.</dt>
+                <dt>Prof</dt>
                 <dd>{plano.professor || '—'}</dd>
                 <dt>Tema</dt>
                 <dd>{plano.temaDaAula || '—'}</dd>
@@ -96,8 +96,8 @@ export function ImportarPlano({
                   {plano.objetivos.filter((o) => o.trim()).length} objetivo(s),{' '}
                   {plano.habilidades.length} habilidade(s),{' '}
                   {plano.materiais.filter((m) => m.trim()).length} material(is),{' '}
-                  {plano.metodologia.filter((m) => m.trim()).length} passo(s) de metodologia,{' '}
-                  {plano.recursos.filter((r) => r.trim()).length} recurso(s)
+                  {plano.metodologia.filter((m) => m.trim()).length} parágrafo(s) de metodologia,{' '}
+                  {plano.links.filter((l) => l.nome.trim() || l.link.trim()).length} link(s)
                 </dd>
                 <dt>Estrutura</dt>
                 <dd>

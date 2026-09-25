@@ -39,13 +39,22 @@ ele desenha um cartão escuro com o identificador do blob. Quando
 A tela avisa quando falta campo obrigatório, quando os blocos da atividade não fecham os
 90 minutos e quando algum texto passou do tamanho da caixa do template.
 
-Toda lista do formulário — objetivos, materiais, metodologia, recursos, habilidades da
+Toda lista do formulário — objetivos, materiais, metodologia, links, habilidades da
 BNCC, blocos da estrutura e os passos dentro de cada bloco — tem **setas ↑ ↓ para
 reordenar**, além do × de remover, como já havia na seleção de escolas. Quem acrescentou um
 item no fim, ou errou a ordem, move em vez de reescrever tudo. As habilidades da BNCC
 continuam **editáveis depois de adicionadas** (código e descrição), em vez de virarem
 texto fixo. As caixas de texto crescem conforme o conteúdo, para item longo não ficar com
 o fim escondido.
+
+Nos **objetivos**, cada item aparece com a bolinha "•" (como sai no PDF) e o Enter funciona
+como num editor: abre o próximo objetivo já com o cursor nele (Shift+Enter quebra a linha
+no mesmo item; Backspace num item vazio o apaga; colar várias linhas vira um objetivo por
+linha). Materiais, Metodologia, Estrutura da atividade e Links necessários têm um lembrete
+do que a coordenação espera ali — metodologia em texto corrido, não em tópicos; estrutura
+bem descrita; equipamento em Materiais e sites/plataformas, com nome e link, em **Links
+necessários** (que substituiu "Recursos necessários"; planos antigos são convertidos ao
+abrir).
 
 O rascunho do que está sendo editado fica salvo no navegador (`localStorage`, isolado por
 professor — ver [Login e planos salvos](#login-e-planos-salvos)), então recarregar a página
@@ -88,7 +97,7 @@ Plano de aula Núcleo WIT - Matheus Henrique - 31.08 - 04.09.pdf
 
 Regras, em [`src/nomeDoDocumento.ts`](src/nomeDoDocumento.ts):
 
-- **Nome**: primeiro nome + primeiro sobrenome, tirados do campo *Prof.*. Partículas são
+- **Nome**: primeiro nome + primeiro sobrenome, tirados do campo *Prof*. Partículas são
   puladas ("Ana de Souza Lima" → "Ana Souza"). A função só encurta: quem digitar
   "Matheus H." recebe "Matheus H.", porque não há como adivinhar o nome completo.
 - **Data**: o campo *Semana*, com as barras trocadas por ponto. O padrão escrito usa
@@ -168,7 +177,7 @@ segundo copiava o plano do primeiro **campo por campo**, a partir do PDF.
   planos das duas. A lista fica em `EQUIPES`, em [`src/constants.ts`](src/constants.ts), e
   espelha a tabela `equipes` do banco: mexeu num lado, mexa no outro.
 - **No cadastro** o professor responde *"Qual equipe você faz parte?"* (e o nome e
-  sobrenome, que é o que sai no campo *Prof.*). Isso vai como metadado do usuário, e uma
+  sobrenome, que é o que sai no campo *Prof*). Isso vai como metadado do usuário, e uma
   trigger no banco (`ao_criar_usuario`) cria o perfil e os vínculos — ninguém entra sem
   equipe, e ninguém se coloca na Gestão sozinho (a trigger descarta `gestao` do metadado,
   que é escrito pelo próprio usuário).
@@ -180,7 +189,7 @@ segundo copiava o plano do primeiro **campo por campo**, a partir do PDF.
   (é a confirmação de que a equipe está enxergando; sem isso, quem compartilha via a lista
   vazia e concluía que não tinha funcionado). O colega abre um plano
   ("Compartilhado por Fulano") e clica em **"Fazer uma cópia para mim"**. A cópia entra na
-  conta dele com todo o conteúdo do original, trocando só o *Prof.* pelo nome dele e os
+  conta dele com todo o conteúdo do original, trocando só o *Prof* pelo nome dele e os
   núcleos pelos que ele costuma atender (`perfis.escolas_padrao`, que se atualiza a cada
   cópia). A cópia nasce privada, e o original do autor não é tocado.
 - **Gestão**: equipe à parte, com um botão próprio no cabeçalho. Vê todos os professores e
@@ -191,6 +200,28 @@ segundo copiava o plano do primeiro **campo por campo**, a partir do PDF.
   que somem são só conveniência. Um professor não consegue, nem chamando a API direto,
   ler plano privado de outro, compartilhar com equipe de que não faz parte, editar plano
   alheio, se promover à Gestão ou remexer nas equipes dos outros.
+
+### Plano mestre: um plano por equipe por semana
+
+Para a equipe não acabar com várias versões do mesmo plano, o plano compartilhado é feito
+por **um responsável por semana**:
+
+- Em **"Planos da equipe"**, o quadro *"Quem faz o plano de cada semana"* mostra a semana
+  atual e as duas seguintes. Um professor clica em **"Sou o responsável"**, confirma, e o
+  formulário abre um plano novo da equipe para aquela semana (curso, semana, nome e núcleos
+  já preenchidos). O mesmo botão aparece no formulário, ao escolher compartilhar com a equipe.
+- Com a semana assumida, **só o responsável cria e altera o plano da equipe** daquela
+  semana. Os colegas veem o plano, combinam as correções com ele e, quando estiver salvo,
+  fazem a própria cópia (com o nome e os núcleos deles), como antes.
+- **Um plano de equipe por semana**: se a semana já tem plano, ninguém cria outro.
+- **Só a semana atual e as duas próximas**: o campo *Semana* virou uma lista com essas três
+  opções, e fora delas não dá para assumir semana nem criar ou alterar plano da equipe.
+- O responsável pode **largar** a semana enquanto não salvou o plano. Depois disso, só a
+  Gestão destrava (aba **Semanas**); o plano que já estava salvo volta a ser só do autor.
+- Como o resto, quem garante é o banco:
+  [`supabase/migrations/20260925_plano_mestre.sql`](supabase/migrations/20260925_plano_mestre.sql)
+  (tabela `responsaveis_semana`, coluna `planos.semana_inicio` e triggers que recusam o que
+  fugir da regra, com mensagem em português). Plano privado não passa por essas regras.
 
 ### Exportação em lote (Gestão)
 
@@ -262,6 +293,12 @@ equipes de cada professor conforme a lista da coordenação.
 Gestão ter remanejado alguém recoloca a pessoa na equipe original. Depois da primeira
 execução, use a tela da Gestão.
 
+Depois dele, rode também
+[`20260906_login_google.sql`](supabase/migrations/20260906_login_google.sql) e
+[`20260925_plano_mestre.sql`](supabase/migrations/20260925_plano_mestre.sql) (plano mestre;
+idempotente). **Rode o do plano mestre antes de publicar esta versão do site** — o app
+passa a gravar a coluna `planos.semana_inicio` e a ler `responsaveis_visao`.
+
 Para acrescentar alguém à Gestão (o rodapé do arquivo tem o mesmo trecho):
 
 ```sql
@@ -306,13 +343,13 @@ scripts/          geradores e conferência de layout
 Página 1 — Cabeçalho, Escolas, Tema da aula, Resumo da aula, Materiais necessários,
 Objetivos de aprendizagem, Habilidades da aula.
 Página 2 — Metodologia, Estrutura da atividade.
-Página 3 — Recursos necessários, Observação.
+Página 3 — Links necessários, Observação.
 
 Essa é a ordem do PDF de referência mais recente do Núcleo WIT — note que difere da
 versão anterior deste gerador (que tinha Resumo e Estrutura numa página à parte). O campo
 **Observação**, no fim da página 3, é o único que não existe nesse PDF de referência: foi
 acrescentado a pedido, com o mesmo estilo de caixa das demais seções, ocupando o espaço que
-sobrou depois de encolher a caixa de Recursos.
+sobrou depois de encolher a caixa de Links (antes, Recursos).
 
 ## Fidelidade do layout
 
