@@ -1,6 +1,6 @@
 import { CICLOS, CURSOS, DURACOES_DISPONIVEIS, MINUTOS_PADRAO, NUCLEOS, planoVazio } from '../constants'
 import { larguraDoTexto } from '../pdf/ajuste'
-import { CAIXAS, CAIXAS_CABECALHO, TEXTOS, type Caixa } from '../pdf/layout'
+import { CAIXAS, CAIXAS_CABECALHO, CAIXAS_PAGINA3_ANTIGA, TEXTOS, type Caixa } from '../pdf/layout'
 import type { BlocoAtividade, Habilidade, PlanoDeAula } from '../types'
 import type { ConteudoDoPdf, Linha, Marcador } from './linhas'
 
@@ -25,6 +25,16 @@ function dentro(linha: Linha, caixa: Caixa, pagina: number): boolean {
 
 function linhasDa(linhas: Linha[], caixa: Caixa, pagina: number): Linha[] {
   return linhas.filter((l) => dentro(l, caixa, pagina)).sort((a, b) => a.y - b.y)
+}
+
+/**
+ * PDFs gerados antes da troca de ordem da página 3 têm o rótulo "Observação"
+ * lá embaixo (abaixo de Recursos); nos atuais ele fica no topo da página.
+ */
+function observacaoEmbaixo(linhas: Linha[]): boolean {
+  return linhas.some(
+    (l) => l.pagina === 3 && normalizar(l.texto) === 'observacao' && l.y > CAIXAS.recursos.top,
+  )
 }
 
 /** Tira o rótulo do começo do campo do cabeçalho ("Curso: X" → "X"). */
@@ -302,8 +312,9 @@ export function planoDoConteudo(conteudo: ConteudoDoPdf): Importacao {
   plano.materiais = lista(conteudo, CAIXAS.materiais, 1, 'materiais')
   plano.objetivos = lista(conteudo, CAIXAS.objetivos, 1, 'objetivos')
   plano.metodologia = lista(conteudo, CAIXAS.metodologia, 2, 'metodologia')
-  plano.recursos = lista(conteudo, CAIXAS.recursos, 3, 'recursos')
-  plano.observacao = paragrafo(linhas, CAIXAS.observacao, 3)
+  const pagina3 = observacaoEmbaixo(linhas) ? CAIXAS_PAGINA3_ANTIGA : CAIXAS
+  plano.observacao = paragrafo(linhas, pagina3.observacao, 3)
+  plano.recursos = lista(conteudo, pagina3.recursos, 3, 'recursos')
 
   const { habilidades, naoLidas } = lerHabilidades(linhas)
   plano.habilidades = habilidades

@@ -35,8 +35,8 @@ export interface PlanoDeAula {
   metodologia: string[]
   estrutura: BlocoAtividade[]
 
-  // Página 3: Recursos → Observação
-  recursos: string[]
-  /** Campo livre no fim do documento — não faz parte do modelo original. */
+  // Página 3: Observação → Recursos
+  /** Campo livre no início da página 3 — não faz parte do modelo original. */
   observacao: string
+  recursos: string[]
 }

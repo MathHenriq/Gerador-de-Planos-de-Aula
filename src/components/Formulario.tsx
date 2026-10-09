@@ -243,7 +243,16 @@ export function Formulario({
             />
           </Secao>
 
-          <Secao titulo="Recursos necessários" explica="Ferramentas e plataformas, página 3.">
+          <Secao titulo="Observação" explica="Campo livre, opcional — abre a página 3.">
+            <textarea
+              rows={3}
+              value={plano.observacao}
+              placeholder="Alguma observação sobre a aula, a turma ou o núcleo…"
+              onChange={(e) => aoMudar({ observacao: e.target.value })}
+            />
+          </Secao>
+
+          <Secao titulo="Recursos necessários" explica="Ferramentas e plataformas — fecha a página 3.">
             <ListaEditavel
               itens={plano.recursos}
               aoMudar={(recursos) => aoMudar({ recursos })}
@@ -251,15 +260,6 @@ export function Formulario({
               rotuloAdicionar="Adicionar recurso"
               descricaoDoItem="recurso"
               linhas={1}
-            />
-          </Secao>
-
-          <Secao titulo="Observação" explica="Campo livre, opcional — fecha a página 3.">
-            <textarea
-              rows={3}
-              value={plano.observacao}
-              placeholder="Alguma observação sobre a aula, a turma ou o núcleo…"
-              onChange={(e) => aoMudar({ observacao: e.target.value })}
             />
           </Secao>
 
