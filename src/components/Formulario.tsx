@@ -252,13 +252,13 @@ export function Formulario({
             />
           </Secao>
 
-          <Secao titulo="Recursos necessários" explica="Ferramentas e plataformas — fecha a página 3.">
+          <Secao titulo="Links" explica="Somente links usados na aula — fecha a página 3.">
             <ListaEditavel
               itens={plano.recursos}
               aoMudar={(recursos) => aoMudar({ recursos })}
-              placeholder="Ex.: VSCode"
-              rotuloAdicionar="Adicionar recurso"
-              descricaoDoItem="recurso"
+              placeholder="Ex.: https://www.canva.com"
+              rotuloAdicionar="Adicionar link"
+              descricaoDoItem="link"
               linhas={1}
             />
           </Secao>

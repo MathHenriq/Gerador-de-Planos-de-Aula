@@ -595,7 +595,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
         <CaixaEstrutura caixa={CAIXAS.estrutura} texto={TEXTOS.estrutura} blocos={plano.estrutura} />
       </Page>
 
-      {/* Página 3 — observação e recursos necessários (links) */}
+      {/* Página 3 — observação e links */}
       <Page size={PAGINA_PT} style={s.pagina}>
         <Marca assets={assets} />
 
@@ -607,7 +607,7 @@ export function PlanoDocument({ plano, assets }: PlanoDocumentProps) {
           conteudo={plano.observacao}
         />
 
-        <RotuloSecao rotulo={ROTULOS.recursos}>Recursos necessários</RotuloSecao>
+        <RotuloSecao rotulo={ROTULOS.recursos}>Links</RotuloSecao>
         <Moldura caixa={CAIXAS.recursos} />
         <CaixaLista
           caixa={CAIXAS.recursos}

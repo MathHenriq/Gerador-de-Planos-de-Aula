@@ -98,7 +98,7 @@ export const planoDeAmostra: PlanoDeAula = {
     },
   ],
 
-  recursos: ['Canva', 'Globe', 'VSCode'],
+  recursos: ['https://www.canva.com', 'https://globe.engineer', 'https://code.visualstudio.com'],
 
   observacao:
     'Duas equipes chegaram atrasadas por causa do transporte — combinado reforçar com a coordenação para a próxima semana.',

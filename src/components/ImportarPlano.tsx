@@ -97,7 +97,7 @@ export function ImportarPlano({
                   {plano.habilidades.length} habilidade(s),{' '}
                   {plano.materiais.filter((m) => m.trim()).length} material(is),{' '}
                   {plano.metodologia.filter((m) => m.trim()).length} passo(s) de metodologia,{' '}
-                  {plano.recursos.filter((r) => r.trim()).length} recurso(s)
+                  {plano.recursos.filter((r) => r.trim()).length} link(s)
                 </dd>
                 <dt>Estrutura</dt>
                 <dd>
